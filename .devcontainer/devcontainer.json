@@ -1,0 +1,27 @@
+{
+    "name":"kaggle-deps",
+    "dockerFile": "Dockerfile",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/kaggle,type=bind",
+    "workspaceFolder": "/kaggle",
+    "runArgs": [
+        "--gpus", "all",
+        "--shm-size", "60gb"
+    ],
+    "customizations": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.isort",
+        "ms-python.mypy-type-checker",
+        "esbenp.prettier-vscode",
+        "yzhang.markdown-all-in-one",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "njpwerner.autodocstring",
+        "vscodevim.vim"
+      ]
+  },
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} & sh script/setup_dev.sh"
+}
