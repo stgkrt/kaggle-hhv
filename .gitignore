@@ -183,3 +183,5 @@ wandb
 *.jpg
 *.tiff
 *.npy
+
+input/
