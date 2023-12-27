@@ -22,7 +22,16 @@
             "redhat.vscode-yaml",
             "njpwerner.autodocstring",
             "vscodevim.vim"
-        ]
+        ],
+        "settings": {
+            "python.formatting.provider": "black",
+            "[python]" : {
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": true
+                }
+            }
+        }
     }
   },
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} & sh script/setup_dev.sh"
