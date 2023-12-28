@@ -46,13 +46,12 @@ class DecoderBlock(nn.Module):
         self, x: torch.Tensor, skip: torch.Tensor | None = None
     ) -> torch.Tensor:
         x = F.interpolate(x, scale_factor=2, mode="nearest")
-        if isinstance(skip, torch.Tensor):
+        if skip is not None:
             skip = self.dropout_skip(skip)
             x = torch.cat([x, skip], dim=1)
 
         x = self.conv1(x)
         x = self.conv2(x)
-
         return x
 
 
@@ -116,7 +115,6 @@ class SimpleUnetDecoder(nn.Module):
         for i, decoder_block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             x = decoder_block(x, skip)
-
         return x
 
 
