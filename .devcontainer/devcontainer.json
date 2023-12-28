@@ -25,6 +25,9 @@
         ],
         "settings": {
             "python.formatting.provider": "black",
+            "python.formatting.blackArgs": ["--config=${workspacefolder}/setup.cfg"],
+            "python.linting.mypyArgs": ["--config=${workspacefolder}/setup.cfg"],
+            "python.linting.flake8Args": ["--config=${workspacefolder}/setup.cfg"],
             "[python]" : {
                 "editor.formatOnSave": true,
                 "editor.codeActionsOnSave": {
