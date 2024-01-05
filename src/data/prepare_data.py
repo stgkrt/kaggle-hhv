@@ -160,7 +160,7 @@ def make_dataset_df(config: argparse.Namespace) -> pd.DataFrame:
                     this_file_slice_num = int(file_slice_num) + i
                     data_dict[
                         f"file_name_{i}"
-                    ] = f"{this_file_slice_num:04d}_{patch_id}.tif"
+                    ] = f"{this_file_slice_num:04d}_{patch_id}.npy"
                 tmp_df = pd.DataFrame(data_dict, index=[0])
             else:
                 break
@@ -169,7 +169,7 @@ def make_dataset_df(config: argparse.Namespace) -> pd.DataFrame:
 
 
 def run_prepare_data(config: argparse.Namespace) -> None:
-    split_patch_image(config)
+    # split_patch_image(config)
     df = make_dataset_df(config)
     print(df["data_name"].unique())
     print(df.head())
@@ -183,8 +183,8 @@ if __name__ == "__main__":
     config.input_data_dir = os.path.join(config.input_dir, config.competition_name)
     config.processed_data_dir = os.path.join("/kaggle", "working", "_processed")
     config.slice_num = 3
-    # config.phase = "train"
-    config.phase = "valid"
+    config.phase = "train"
+    # config.phase = "valid"
     if config.phase == "train":
         config.patch_height = 384
         config.patch_width = 384
