@@ -185,3 +185,4 @@ wandb
 *.npy
 
 input/
+working/
