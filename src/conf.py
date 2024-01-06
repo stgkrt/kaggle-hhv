@@ -29,6 +29,8 @@ class ExpConfig:
     batch_size = 32
     shuffle = True
     num_workers = 2
+    train_data_name = ["kidney_1_voi"]
+    valid_data_name = ["kidney_3_sparse"]
     # model
     model_name = "SegModel"
     encoder_name = "resnet18"
