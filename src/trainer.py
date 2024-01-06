@@ -9,7 +9,7 @@ from lightning.pytorch.callbacks import (
     RichModelSummary,
     RichProgressBar,
 )
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.loggers import CSVLogger, WandbLogger
 
 from src.conf import ExpConfig
 from src.data.data_module import DataModule
@@ -35,7 +35,8 @@ def run_train(config: ExpConfig) -> None:
         monitor=config.monitor,
         mode=config.monitor_mode,
         save_top_k=1,
-        save_last=False,
+        save_last=True,
+        save_weights_only=True,
     )
     lr_monitor = LearningRateMonitor("epoch")
     progress_bar = RichProgressBar()
@@ -50,10 +51,13 @@ def run_train(config: ExpConfig) -> None:
         offline=True,
     )
     pl_logger.log_hyperparams(asdict(config))
+    csv_logger = CSVLogger(save_dir=config.save_dir, name="log")
+    csv_logger.log_hyperparams(asdict(config))
+
     trainer = L.Trainer(
         max_epochs=config.epochs,
         callbacks=[checkpoint_cb, lr_monitor, progress_bar, model_summary],
-        logger=pl_logger,
+        logger=[pl_logger, csv_logger],
         sync_batchnorm=True,
         check_val_every_n_epoch=config.check_val_every_n_epoch,
     )
