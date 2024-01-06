@@ -1,12 +1,12 @@
-import argparse
-
 import timm
 import torch
 import torch.nn as nn
 
+from src.conf import ExpConfig
+
 
 class SimpleTimmEncoder(nn.Module):
-    def __init__(self, config: argparse.Namespace):
+    def __init__(self, config: ExpConfig):
         super().__init__()
         self.encoder = timm.create_model(
             config.encoder_name,
@@ -24,10 +24,7 @@ class SimpleTimmEncoder(nn.Module):
 
 
 if __name__ == "__main__":
-    config = argparse.Namespace()
-    config.encoder_name = "resnet18"
-    config.pretrained = True
-    config.in_channels = 3
+    config = ExpConfig()
     model = SimpleTimmEncoder(config)
 
     x = torch.randn(1, 3, 256, 256)

@@ -2,12 +2,12 @@
 Modified the segmentation_model_pytorch U-Net decoder
 https://github.com/qubvel/segmentation_models.pytorch
 """
-import argparse
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from segmentation_models_pytorch.base import modules as md
+
+from src.conf import ExpConfig
 
 
 class DecoderBlock(nn.Module):
@@ -17,7 +17,7 @@ class DecoderBlock(nn.Module):
         skip_channels: int,
         out_channels: int,
         use_batchnorm: bool = True,
-        dropout: int = 0,
+        dropout: float = 0,
     ) -> None:
         super().__init__()
 
@@ -77,11 +77,11 @@ class CenterBlock(nn.Sequential):
 class SimpleUnetDecoder(nn.Module):
     def __init__(
         self,
-        config: argparse.Namespace,
+        config: ExpConfig,
     ):
         super().__init__()
-        encoder_channels = config.encoder_channels
-        decoder_channels = config.decoder_channels
+        encoder_channels = config.encoder_channels  # type: ignore
+        decoder_channels = config.decoder_channels  # type: ignore
         use_batchnorm = config.use_batchnorm
         dropout = config.dropout
 
@@ -119,11 +119,7 @@ class SimpleUnetDecoder(nn.Module):
 
 
 if __name__ == "__main__":
-    config = argparse.Namespace()
-    config.encoder_channels = [64, 64, 128, 256, 512]
-    config.decoder_channels = [512, 256, 128, 64, 64]
-    config.use_batchnorm = True
-    config.dropout = 0
+    config = ExpConfig()
     model = SimpleUnetDecoder(config)
 
     skip_connection_shapes = [
