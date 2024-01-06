@@ -34,7 +34,7 @@ class ExpConfig:
     encoder_name = "resnet18"
     pretrained = True
     in_channels = slice_num
-    out_channels = 1
+    out_channels = slice_num
     use_batchnorm = True
     dropout = 0.2
     encoder_channels = [64, 64, 128, 256, 512]
