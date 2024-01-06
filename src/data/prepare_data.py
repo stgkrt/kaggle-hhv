@@ -184,7 +184,7 @@ def make_debug_df(phase="train"):
     if phase == "train":
         use_data_name = "kidney_1_voi"
     else:
-        use_data_name = "kidney_2"
+        use_data_name = "kidney_3_sparse"
     df = df[df["data_name"] == use_data_name]
     df = df.sample(1000).reset_index(drop=True)
     df.to_csv(os.path.join("/kaggle", "working", f"{phase}_debug.csv"), index=False)
@@ -197,8 +197,8 @@ if __name__ == "__main__":
     config.input_data_dir = os.path.join(config.input_dir, config.competition_name)
     config.processed_data_dir = os.path.join("/kaggle", "working", "_processed")
     config.slice_num = 3
-    config.phase = "train"
-    # config.phase = "valid"
+    # config.phase = "train"
+    config.phase = "valid"
     if config.phase == "train":
         config.patch_height = 384
         config.patch_width = 384
