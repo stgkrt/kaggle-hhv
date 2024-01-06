@@ -31,6 +31,9 @@ class SimpleSegModel(nn.Module):
 if __name__ == "__main__":
     config = ExpConfig()
     model = SimpleSegModel(config)
+    # 下ので読み出せるけどあってない？
+    # weights = torch.load("/kaggle/working/debug/last.ckpt")["state_dict"]
+    # model.load_state_dict(weights, strict=False)
 
     x = torch.randn(1, 3, 256, 256)
     y = model(x)
