@@ -1,54 +1,66 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
 
 
 @dataclass
 class ExpConfig:
     # common
-    debug = True
-    phase = "train"
+    debug: bool = True
+    phase: str = "train"
     # experiment
     if debug:
-        exp_name = "debug"
-        exp_category = "debug"
+        exp_name: str = "debug"
+        exp_category: str = "debug"
     else:
-        exp_name = "exp000"
-        exp_category = "baseline"
-    seed = 42
+        exp_name: str = "exp000"  # type: ignore
+        exp_category: str = "baseline"  # type: ignore
+    seed: int = 42
     # dirs
-    input_dir = "/kaggle/input"
-    competition_name = "blood-vessel-segmentation"
-    input_data_dir = os.path.join(input_dir, competition_name)
-    processed_data_dir = os.path.join("/kaggle", "working", "_processed")
-    output_dir = "/kaggle/working"
-    save_dir = os.path.join(output_dir, exp_name)
+    input_dir: str = "/kaggle/input"
+    competition_name: str = "blood-vessel-segmentation"
+    input_data_dir: str = os.path.join(input_dir, competition_name)
+    processed_data_dir: str = os.path.join("/kaggle", "working", "_processed")
+    output_dir: str = "/kaggle/working"
+    save_dir: str = os.path.join(output_dir, exp_name)
     # data
-    img_height = 256
-    img_width = 256
-    slice_num = 3
-    batch_size = 32
-    shuffle = True
-    num_workers = 2
-    train_data_name = ["kidney_1_voi"]
-    valid_data_name = ["kidney_3_sparse"]
+    img_height: int = 256
+    img_width: int = 256
+    slice_num: int = 3
+    batch_size: int = 32
+    num_workers: int = 2
+    train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_voi"])
+    valid_data_name: List[str] = field(default_factory=lambda: ["kidney_3_sparse"])
     # model
-    model_name = "SegModel"
-    encoder_name = "resnet18"
-    pretrained = True
-    in_channels = slice_num
-    out_channels = slice_num
-    use_batchnorm = True
-    dropout = 0.2
-    encoder_channels = [64, 64, 128, 256, 512]
-    decoder_channels = [512, 256, 128, 64, 64]
+    model_name: str = "SegModel"
+    encoder_name: str = "resnet18"
+    pretrained: bool = True
+    in_channels: int = slice_num
+    out_channels: int = slice_num
+    use_batchnorm: bool = True
+    dropout: float = 0.2
+    encoder_channels: List[int] = field(
+        default_factory=lambda: [64, 128, 256, 512, 512]
+    )
+    decoder_channels: List[int] = field(default_factory=lambda: [512, 256, 128, 64, 64])
     # train
-    epochs = 10
+    epochs: int = 10
     if debug:
-        epochs = 5
-    lr = 1e-3
-    T_max = epochs
-    eta_min = 1e-5
+        epochs = 2
+    T_max: int = epochs
+    lr: float = 1e-3
+    eta_min: float = 1e-8
     # logger
-    monitor = "val_loss"
-    monitor_mode = "min"
-    check_val_every_n_epoch = 1
+    monitor: str = "val_loss"
+    monitor_mode: str = "min"
+    check_val_every_n_epoch: int = 1
+
+
+if __name__ == "__main__":
+    config = ExpConfig()
+    print(config)
+    print("---")
+    from dataclasses import asdict
+
+    config_dict = asdict(config)
+    print(config_dict)
