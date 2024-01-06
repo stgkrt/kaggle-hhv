@@ -15,7 +15,8 @@ from src.conf import ExpConfig
 from src.data.data_module import DataModule
 from src.model.model_module import ModelModule
 
-if __name__ == "__main__":
+
+def run_train(config: ExpConfig) -> None:
     config = ExpConfig()
     if not os.path.exists(config.save_dir):
         os.makedirs(config.save_dir)
@@ -57,3 +58,10 @@ if __name__ == "__main__":
         check_val_every_n_epoch=config.check_val_every_n_epoch,
     )
     trainer.fit(model, datamodule=datamodule)
+
+    return
+
+
+if __name__ == "__main__":
+    config = ExpConfig()
+    run_train(config)
