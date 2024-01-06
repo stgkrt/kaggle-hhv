@@ -18,6 +18,7 @@ class DataModule(L.LightningDataModule):
             df = pd.read_csv(os.path.join(self.config.output_dir, "train_debug.csv"))
         else:
             df = pd.read_csv(os.path.join(self.config.output_dir, "train.csv"))
+        df = df[df["data_name"].isin(self.config.train_data_name)]
         dataset = SegDataset(df, self.config)
         dataloader = DataLoader(
             dataset,
@@ -33,6 +34,7 @@ class DataModule(L.LightningDataModule):
             df = pd.read_csv(os.path.join(self.config.output_dir, "valid_debug.csv"))
         else:
             df = pd.read_csv(os.path.join(self.config.output_dir, "valid.csv"))
+        df = df[df["data_name"].isin(self.config.valid_data_name)]
         dataset = SegDataset(df, self.config)
         dataloader = DataLoader(
             dataset,
