@@ -176,6 +176,20 @@ def run_prepare_data(config: argparse.Namespace) -> None:
     df.to_csv(os.path.join("/kaggle", "working", f"{config.phase}.csv"), index=False)
 
 
+def make_debug_df(phase="train"):
+    df = pd.read_csv(os.path.join("/kaggle", "working", f"{phase}.csv"))
+    print(df.head())
+
+    print(df["data_name"].unique())
+    if phase == "train":
+        use_data_name = "kidney_1_voi"
+    else:
+        use_data_name = "kidney_2"
+    df = df[df["data_name"] == use_data_name]
+    df = df.sample(1000).reset_index(drop=True)
+    df.to_csv(os.path.join("/kaggle", "working", f"{phase}_debug.csv"), index=False)
+
+
 if __name__ == "__main__":
     config = argparse.Namespace()
     config.input_dir = "/kaggle/input"
@@ -196,4 +210,5 @@ if __name__ == "__main__":
         config.stride_height = 256
         config.stride_width = 256
 
-    run_prepare_data(config)
+    # run_prepare_data(config)
+    make_debug_df(config.phase)
