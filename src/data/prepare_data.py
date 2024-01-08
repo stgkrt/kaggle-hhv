@@ -1,4 +1,3 @@
-import argparse
 import os
 from glob import glob
 
@@ -7,22 +6,24 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from src.conf import ExpConfig
 
-def get_data_name_list(config: argparse.Namespace) -> list[str]:
+
+def get_data_name_list(config: ExpConfig, phase: str = "train") -> list[str]:
     input_data_dir = config.input_data_dir
-    if config.phase == "train":
-        phase = "train"
-    elif config.phase == "valid":
-        phase = "train"
+    if phase == "train":
+        load_phase = "train"
+    elif phase == "valid":
+        load_phase = "train"
     else:
-        phase = "test"
-    data_name_list = os.listdir(os.path.join(input_data_dir, phase))
+        load_phase = "test"
+    data_name_list = os.listdir(os.path.join(input_data_dir, load_phase))
     data_name_list = [data_name.split(".")[0] for data_name in data_name_list]
     return sorted(data_name_list)
 
 
 def get_file_name_list(
-    config: argparse.Namespace,
+    config: ExpConfig,
     data_name: str,
     data_type: str = "images",
     is_processed: bool = False,
@@ -34,7 +35,9 @@ def get_file_name_list(
             phase = "train"
         else:
             phase = "test"
-        data_dir = config.processed_data_dir
+        data_dir = (
+            f"{config.processed_data_dir}_{config.stride_height}_{config.stride_width}"
+        )
         print(data_dir)
         file_name_list = glob(
             os.path.join(data_dir, phase, data_name, data_type, "*.npy")
@@ -52,33 +55,45 @@ def get_file_name_list(
     return sorted(file_name_list)
 
 
-def split_patch_image(config: argparse.Namespace):
+def set_save_and_load_phase(phase: str = "train") -> tuple[str, str]:
+    if phase == "train":
+        load_phase = "train"
+        save_phase = "train"
+    elif phase == "valid":
+        load_phase = "train"
+        save_phase = "valid"
+    else:
+        load_phase = "test"
+        save_phase = "test"
+    return load_phase, save_phase
+
+
+def save_split_patch_image(config: ExpConfig, phase: str = "train"):
+    """save splited patch image and label from original image and label
+
+    Args:
+        config (ExpConifg): _description_
+    """
     # dataloaderでrandomで切り出せるようにsizeは大きめにとる
     patch_height = config.patch_height
     patch_width = config.patch_width
     # stride分ずらしながら切り出す
     stride_height = config.stride_height
     stride_width = config.stride_width
-    if config.phase == "train":
-        load_phase = "train"
-        save_phase = "train"
-    elif config.phase == "valid":
-        load_phase = "train"
-        save_phase = "valid"
-    else:
-        load_phase = "test"
-        save_phase = "test"
+    load_phase, save_phase = set_save_and_load_phase(phase)
     data_dir = config.input_data_dir
-    processed_data_dir = config.processed_data_dir
-    data_name_list = get_data_name_list(config)
+    processed_data_dir = f"{config.processed_data_dir}_{stride_height}_{stride_width}"
+    data_name_list = get_data_name_list(config, phase)
     print(data_name_list)
     for data_name in data_name_list[1:]:
         print("processing... ->", "data_name:", data_name, "phase:", load_phase)
         file_name_list = get_file_name_list(config, data_name, "images")
+        # set dir
         input_image_dir = os.path.join(data_dir, load_phase, data_name, "images")
         input_label_dir = os.path.join(data_dir, load_phase, data_name, "labels")
         print("input_image_dir:", input_image_dir)
         print("input_label_dir:", input_label_dir)
+        # set save dir
         processed_image_dir = os.path.join(
             processed_data_dir, save_phase, data_name, "images"
         )
@@ -123,6 +138,7 @@ def split_patch_image(config: argparse.Namespace):
                         this_patch_height_min:this_patch_height_max,
                         this_patch_width_min:this_patch_width_max,
                     ]
+
                     label_patch = label[
                         this_patch_height_min:this_patch_height_max,
                         this_patch_width_min:this_patch_width_max,
@@ -137,8 +153,10 @@ def split_patch_image(config: argparse.Namespace):
                         label_patch,
                     )
 
+    return
 
-def make_dataset_df(config: argparse.Namespace) -> pd.DataFrame:
+
+def make_dataset_df(config: ExpConfig) -> pd.DataFrame:
     data_name_list = get_data_name_list(config)
     dataset_df = pd.DataFrame()
     slice_num = config.slice_num
@@ -168,47 +186,72 @@ def make_dataset_df(config: argparse.Namespace) -> pd.DataFrame:
     return dataset_df
 
 
-def run_prepare_data(config: argparse.Namespace) -> None:
-    # split_patch_image(config)
-    df = make_dataset_df(config)
-    print(df["data_name"].unique())
+def run_prepare_data(config: ExpConfig) -> None:
+    if config.phase == "train":
+        print("processing train data")
+        phase = "train"
+        # save_split_patch_image(config, phase)
+        df = make_dataset_df(config)
+        df.to_csv(
+            os.path.join(
+                "/kaggle",
+                "working",
+                f"{phase}_{config.stride_height}_{config.stride_width}.csv",
+            ),
+            index=False,
+        )
+        make_debug_df(config, phase)
+        print("processing valid data")
+        phase = "valid"
+        # save_split_patch_image(config, phase)
+        df = make_dataset_df(config)
+        df.to_csv(
+            os.path.join(
+                "/kaggle",
+                "working",
+                f"{phase}_{config.stride_height}_{config.stride_height}.csv",
+            ),
+            index=False,
+        )
+        make_debug_df(config, phase)
+    else:
+        print("processing test data")
+        phase = "test"
+        save_split_patch_image(config)
+        df = make_dataset_df(config)
+        df.to_csv(os.path.join("/kaggle", "working", f"{phase}.csv"), index=False)
+    return
+
+
+def make_debug_df(config: ExpConfig, phase="train"):
+    df = pd.read_csv(
+        os.path.join(
+            "/kaggle",
+            "working",
+            f"{phase}_{config.stride_height}_{config.stride_width}.csv",
+        )
+    )
     print(df.head())
-    df.to_csv(os.path.join("/kaggle", "working", f"{config.phase}.csv"), index=False)
 
-
-def make_debug_df(phase="train"):
-    df = pd.read_csv(os.path.join("/kaggle", "working", f"{phase}.csv"))
-    print(df.head())
-
-    print(df["data_name"].unique())
+    print("data name unique", df["data_name"].unique())
     if phase == "train":
         use_data_name = "kidney_1_voi"
     else:
         use_data_name = "kidney_3_sparse"
+    print("use data name:", use_data_name)
     df = df[df["data_name"] == use_data_name]
     df = df.sample(1000).reset_index(drop=True)
-    df.to_csv(os.path.join("/kaggle", "working", f"{phase}_debug.csv"), index=False)
+    df.to_csv(
+        os.path.join(
+            "/kaggle",
+            "working",
+            f"{phase}_{config.stride_height}_{config.stride_width}_debug.csv",
+        ),
+        index=False,
+    )
+    return
 
 
 if __name__ == "__main__":
-    config = argparse.Namespace()
-    config.input_dir = "/kaggle/input"
-    config.competition_name = "blood-vessel-segmentation"
-    config.input_data_dir = os.path.join(config.input_dir, config.competition_name)
-    config.processed_data_dir = os.path.join("/kaggle", "working", "_processed")
-    config.slice_num = 3
-    # config.phase = "train"
-    config.phase = "valid"
-    if config.phase == "train":
-        config.patch_height = 384
-        config.patch_width = 384
-        config.stride_height = 256
-        config.stride_width = 256
-    else:
-        config.patch_height = 256
-        config.patch_width = 256
-        config.stride_height = 256
-        config.stride_width = 256
-
-    # run_prepare_data(config)
-    make_debug_df(config.phase)
+    config = ExpConfig()
+    run_prepare_data(config)

@@ -1,5 +1,3 @@
-import os
-
 import lightning as L
 import pandas as pd
 from torch.utils.data import DataLoader
@@ -14,13 +12,13 @@ class DataModule(L.LightningDataModule):
         self.config = config
 
     def train_dataloader(self) -> DataLoader:
-        if self.config.debug:
-            df = pd.read_csv(os.path.join(self.config.output_dir, "train_debug.csv"))
-        else:
-            df = pd.read_csv(os.path.join(self.config.output_dir, "train.csv"))
+        df = pd.read_csv(self.config.train_df)
         df = df[df["data_name"].isin(self.config.train_data_name)].reset_index(
             drop=True
         )
+        if len(df) == 0:
+            print("No training data. df path:", self.config.train_df)
+            raise RuntimeError
         dataset = SegDataset(df, self.config)
         dataloader = DataLoader(
             dataset,
@@ -32,13 +30,13 @@ class DataModule(L.LightningDataModule):
         return dataloader
 
     def val_dataloader(self) -> DataLoader:
-        if self.config.debug:
-            df = pd.read_csv(os.path.join(self.config.output_dir, "valid_debug.csv"))
-        else:
-            df = pd.read_csv(os.path.join(self.config.output_dir, "valid.csv"))
+        df = pd.read_csv(self.config.valid_df)
         df = df[df["data_name"].isin(self.config.valid_data_name)].reset_index(
             drop=True
         )
+        if len(df) == 0:
+            print("No validation data. df path:", self.config.valid_df)
+            raise RuntimeError
         dataset = SegDataset(df, self.config)
         dataloader = DataLoader(
             dataset,

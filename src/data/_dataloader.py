@@ -12,6 +12,8 @@ class SegDataset(Dataset):
     def __init__(self, df: pd.DataFrame, config: ExpConfig):
         self.df = df
         self.config = config
+        self.processed_data_dir = f"{self.config.processed_data_dir}"
+        self.processed_data_dir += f"_{config.stride_height}_{config.stride_width}"
 
     def __len__(self) -> int:
         return len(self.df)
@@ -32,7 +34,7 @@ class SegDataset(Dataset):
 
     def _load_image(self, data_name: str, file_name: str, phase: str) -> torch.Tensor:
         image_file_path = os.path.join(
-            self.config.processed_data_dir, phase, data_name, "images", file_name
+            self.processed_data_dir, phase, data_name, "images", file_name
         )
         image = np.load(image_file_path)
         image = np.expand_dims(image.astype(np.float32), axis=-1)
@@ -42,7 +44,7 @@ class SegDataset(Dataset):
 
     def _load_label(self, data_name: str, file_name: str, phase: str) -> torch.Tensor:
         mask_file_path = os.path.join(
-            self.config.processed_data_dir, phase, data_name, "labels", file_name
+            self.processed_data_dir, phase, data_name, "labels", file_name
         )
         mask = np.load(mask_file_path)
         mask = np.expand_dims(mask.astype(np.float32), axis=-1)
@@ -67,8 +69,12 @@ class SegDataset(Dataset):
 
 if __name__ == "__main__":
     config = ExpConfig()
-
-    df = pd.read_csv(os.path.join(config.output_dir, f"{config.phase}_debug.csv"))
+    train_df_path = os.path.join(
+        config.output_dir,
+        f"{config.phase}_{config.stride_height}_{config.stride_width}_debug.csv",
+    )
+    print(train_df_path)
+    df = pd.read_csv(train_df_path)
     dataset = SegDataset(df, config)
     dataloader = DataLoader(
         dataset,
@@ -88,7 +94,12 @@ if __name__ == "__main__":
 
     print("===")
     config.phase = "valid"
-    df = pd.read_csv(os.path.join(config.output_dir, f"{config.phase}_debug.csv"))
+    df = pd.read_csv(
+        os.path.join(
+            config.output_dir,
+            f"{config.phase}_{config.stride_height}_{config.stride_width}_debug.csv",
+        )
+    )
     dataset = SegDataset(df, config)
     dataloader = DataLoader(
         dataset,
