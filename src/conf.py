@@ -9,12 +9,8 @@ class ExpConfig:
     debug: bool = True
     phase: str = "train"
     # experiment
-    if debug:
-        exp_name: str = "debug"
-        exp_category: str = "debug"
-    else:
-        exp_name: str = "exp000"  # type: ignore
-        exp_category: str = "baseline"  # type: ignore
+    exp_name: str = "exp000"  # type: ignore
+    exp_category: str = "baseline"  # type: ignore
     seed: int = 42
     # dirs
     input_dir: str = "/kaggle/input"
@@ -24,16 +20,29 @@ class ExpConfig:
     output_dir: str = "/kaggle/working"
     save_dir: str = os.path.join(output_dir, exp_name)
     # data
-    img_height: int = 256
-    img_width: int = 256
-    slice_num: int = 3
+    img_height: int = 512
+    img_width: int = 512
+    ## preparedata
+    stride_height: int = img_height
+    stride_width: int = img_width
+    patch_height: int = int(stride_height * 1.5)
+    patch_width: int = int(stride_width * 1.5)
+    ## loader
+    slice_num: int = 1
     batch_size: int = 32
     num_workers: int = 2
+    train_df: str = os.path.join(
+        output_dir, f"train_{stride_height}_{stride_width}.csv"
+    )
+    valid_df: str = os.path.join(
+        output_dir, f"valid._{stride_height}_{stride_width}.csv"
+    )
     train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_voi"])
     valid_data_name: List[str] = field(default_factory=lambda: ["kidney_3_sparse"])
+
     # model
     model_name: str = "SegModel"
-    encoder_name: str = "resnet18"
+    encoder_name: str = "tf_efficientnet_b0"
     pretrained: bool = True
     in_channels: int = slice_num
     out_channels: int = slice_num
@@ -45,8 +54,6 @@ class ExpConfig:
     decoder_channels: List[int] = field(default_factory=lambda: [512, 256, 128, 64, 64])
     # train
     epochs: int = 10
-    if debug:
-        epochs = 2
     T_max: int = epochs
     lr: float = 1e-3
     eta_min: float = 1e-8
@@ -54,6 +61,16 @@ class ExpConfig:
     monitor: str = "val_loss"
     monitor_mode: str = "min"
     check_val_every_n_epoch: int = 1
+    if debug:
+        exp_name = "debug"
+        exp_category = "debug"
+        train_df = os.path.join(
+            output_dir, f"train_{stride_height}_{stride_width}_debug.csv"
+        )
+        valid_df = os.path.join(
+            output_dir, f"valid_{stride_height}_{stride_width}_debug.csv"
+        )
+        epochs = 2
 
 
 if __name__ == "__main__":
