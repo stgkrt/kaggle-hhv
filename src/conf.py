@@ -6,10 +6,10 @@ from typing import List
 @dataclass
 class ExpConfig:
     # common
-    debug: bool = True
+    debug: bool = False
     phase: str = "train"
     # experiment
-    exp_name: str = "exp000"  # type: ignore
+    exp_name: str = "exp001_diceloss_size512"  # type: ignore
     exp_category: str = "baseline"  # type: ignore
     seed: int = 42
     # dirs
@@ -35,7 +35,7 @@ class ExpConfig:
         output_dir, f"train_{stride_height}_{stride_width}.csv"
     )
     valid_df: str = os.path.join(
-        output_dir, f"valid._{stride_height}_{stride_width}.csv"
+        output_dir, f"valid_{stride_height}_{stride_width}.csv"
     )
     train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_voi"])
     valid_data_name: List[str] = field(default_factory=lambda: ["kidney_3_sparse"])
