@@ -1,8 +1,8 @@
 import lightning as L
 import torch
-import torch.nn as nn
 
 from src.conf import ExpConfig
+from src.losses import DiceLoss
 from src.model._models import SimpleSegModel
 
 # MODEL_TYPE = Union[SimpleSegModel]
@@ -21,7 +21,8 @@ class ModelModule(L.LightningModule):
         super().__init__()
         self.config = config
         self.model = get_model(config)
-        self.loss = nn.BCEWithLogitsLoss()
+        # self.loss = nn.BCEWithLogitsLoss()
+        self.loss = DiceLoss()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
