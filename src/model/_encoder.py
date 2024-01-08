@@ -6,6 +6,10 @@ from src.conf import ExpConfig
 
 
 class SimpleTimmEncoder(nn.Module):
+    """
+    timm based encoder(check timm.list_models() for available models)
+    """
+
     def __init__(self, config: ExpConfig):
         super().__init__()
         self.encoder = timm.create_model(
@@ -16,6 +20,7 @@ class SimpleTimmEncoder(nn.Module):
         )
 
     def get_encoder_channels(self):
+        """get encoder channels"""
         return self.encoder.feature_info.channels()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
