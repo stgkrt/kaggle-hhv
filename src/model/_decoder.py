@@ -2,12 +2,16 @@
 Modified the segmentation_model_pytorch U-Net decoder
 https://github.com/qubvel/segmentation_models.pytorch
 """
+import os
+import sys
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from segmentation_models_pytorch.base import modules as md
 
-from src.conf import ExpConfig
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from conf import ExpConfig
 
 
 class DecoderBlock(nn.Module):

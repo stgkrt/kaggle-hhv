@@ -1,10 +1,14 @@
+import os
+import sys
+
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 
-from src.conf import ExpConfig
-from src.model._decoder import SimpleUnetDecoder
-from src.model._encoder import SimpleTimmEncoder
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from conf import ExpConfig
+from model._decoder import SimpleUnetDecoder
+from model._encoder import SimpleTimmEncoder
 
 
 class SimpleSegModel(nn.Module):
@@ -35,6 +39,6 @@ if __name__ == "__main__":
     # weights = torch.load("/kaggle/working/debug/last.ckpt")["state_dict"]
     # model.load_state_dict(weights, strict=False)
 
-    x = torch.randn(1, 3, 256, 256)
+    x = torch.randn(1, config.in_channels, config.img_height, config.img_width)
     y = model(x)
     print("output shape", y.shape)

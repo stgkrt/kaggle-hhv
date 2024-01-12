@@ -1,8 +1,12 @@
+import os
+import sys
+
 import timm
 import torch
 import torch.nn as nn
 
-from src.conf import ExpConfig
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from conf import ExpConfig
 
 
 class SimpleTimmEncoder(nn.Module):
@@ -32,7 +36,7 @@ if __name__ == "__main__":
     config = ExpConfig()
     model = SimpleTimmEncoder(config)
 
-    x = torch.randn(1, 3, 256, 256)
+    x = torch.randn(1, config.in_channels, config.img_height, config.img_width)
     skip_connections = model(x)
     for idx, sk in enumerate(skip_connections):
         print(idx, "skip connection", sk.shape)

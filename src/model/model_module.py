@@ -1,9 +1,13 @@
+import os
+import sys
+
 import lightning as L
 import torch
 
-from src.conf import ExpConfig
-from src.losses import DiceLoss
-from src.model._models import SimpleSegModel
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from conf import ExpConfig
+from losses import DiceLoss
+from model._models import SimpleSegModel
 
 # MODEL_TYPE = Union[SimpleSegModel]
 
