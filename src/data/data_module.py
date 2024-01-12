@@ -1,9 +1,13 @@
+import os
+import sys
+
 import lightning as L
 import pandas as pd
 from torch.utils.data import DataLoader
 
-from src.conf import ExpConfig
-from src.data._dataloader import SegDataset
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from conf import ExpConfig
+from data._dataloader import SegDataset
 
 
 class DataModule(L.LightningDataModule):
