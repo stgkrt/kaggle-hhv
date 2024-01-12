@@ -40,8 +40,8 @@ class SegDataset(Dataset):
         return image
 
     def _get_random_crop_img(
-        self, image: np.ndarray, mask: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray]:
+        self, image: torch.Tensor, mask: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         _, h, w = image.shape  # channel, height, width
         img_height = self.config.img_height
         img_width = self.config.img_width
