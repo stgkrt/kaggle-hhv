@@ -85,9 +85,10 @@ def save_split_patch_image(config: ExpConfig, phase: str = "train"):
     processed_data_dir = f"{config.processed_data_dir}_{stride_height}_{stride_width}"
     data_name_list = get_data_name_list(config, phase)
     print(data_name_list)
-    for data_name in data_name_list[1:]:
+    for data_name in data_name_list:
         print("processing... ->", "data_name:", data_name, "phase:", load_phase)
         file_name_list = get_file_name_list(config, data_name, "images")
+        print("file num:", len(file_name_list))
         # set dir
         input_image_dir = os.path.join(data_dir, load_phase, data_name, "images")
         input_label_dir = os.path.join(data_dir, load_phase, data_name, "labels")
@@ -160,7 +161,7 @@ def make_dataset_df(config: ExpConfig) -> pd.DataFrame:
     data_name_list = get_data_name_list(config)
     dataset_df = pd.DataFrame()
     slice_num = config.slice_num
-    for data_name in data_name_list[1:]:
+    for data_name in data_name_list:
         print("data name:", data_name)
         file_name_list = get_file_name_list(config, data_name, "images", True)
         original_file_name_list = get_file_name_list(config, data_name, "images", False)
