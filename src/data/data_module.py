@@ -23,7 +23,7 @@ class DataModule(L.LightningDataModule):
         if len(df) == 0:
             print("No training data. df path:", self.config.train_df)
             raise RuntimeError
-        dataset = SegDataset(df, self.config)
+        dataset = SegDataset(df, self.config, phase="train")
         dataloader = DataLoader(
             dataset,
             batch_size=self.config.batch_size,
@@ -41,7 +41,7 @@ class DataModule(L.LightningDataModule):
         if len(df) == 0:
             print("No validation data. df path:", self.config.valid_df)
             raise RuntimeError
-        dataset = SegDataset(df, self.config)
+        dataset = SegDataset(df, self.config, phase="valid")
         dataloader = DataLoader(
             dataset,
             batch_size=self.config.batch_size,

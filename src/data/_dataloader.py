@@ -8,23 +8,38 @@ from torch.utils.data import DataLoader, Dataset
 
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 from conf import ExpConfig
+from data._augmentations import get_transforms
 
 
 class SegDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, config: ExpConfig):
+    def __init__(
+        self, df: pd.DataFrame, config: ExpConfig, phase: str = "train"
+    ) -> None:
         self.df = df
         self.config = config
         self.processed_data_dir = f"{self.config.processed_data_dir}"
         self.processed_data_dir += f"_{config.stride_height}_{config.stride_width}"
+        self.transform = get_transforms(config, phase)
         self.mean_dict = {
             "kidney_1_dense": 91.522667,
             "kidney_2": 131.317631,
             "kidney_3_dense": 76.838148,
+            "kidney_3_sparse": 76.838148,  # dummy
+            "kidney_1_voi": 91.522667,  # dummy
         }
         self.std_dict = {
             "kidney_1_dense": 11.151333,
             "kidney_2": 9.339552,
             "kidney_3_dense": 2.465148,
+            "kidney_3_sparse": 2.465148,  # dummy
+            "kidney_1_voi": 11.151333,  # dummy
+        }
+        self.min_dict = {
+            "kidney_1_dense": 20,
+            "kidney_2": 35,
+            "kidney_3_dense": 40,
+            "kidney_3_sparse": 40,  # dummy
+            "kidney_1_voi": 20,  # dummy
         }
 
     def __len__(self) -> int:
@@ -39,10 +54,17 @@ class SegDataset(Dataset):
         image = (image - mean) / std
         return image
 
+    def _min_max_normalize_img(
+        self, image: np.ndarray, min: float, max: float
+    ) -> np.ndarray:
+        image = image.astype(np.float32)
+        image = (image - min) / (max - min)
+        return image
+
     def _get_random_crop_img(
-        self, image: torch.Tensor, mask: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        _, h, w = image.shape  # channel, height, width
+        self, image: np.ndarray, mask: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        h, w, _ = image.shape  # height, width, ch
         img_height = self.config.img_height
         img_width = self.config.img_width
         if h <= img_height and w <= img_width:
@@ -51,47 +73,55 @@ class SegDataset(Dataset):
             h_offset = np.random.randint(0, h - img_height)
             w_offset = np.random.randint(0, w - img_width)
             crop_img = image[
-                :, h_offset : h_offset + img_height, w_offset : w_offset + img_width
+                h_offset : h_offset + img_height, w_offset : w_offset + img_width
             ]
             crop_mask = mask[
-                :, h_offset : h_offset + img_height, w_offset : w_offset + img_width
+                h_offset : h_offset + img_height, w_offset : w_offset + img_width
             ]
             return crop_img, crop_mask
 
-    def _load_image(self, data_name: str, file_name: str, phase: str) -> torch.Tensor:
+    def _load_image(self, data_name: str, file_name: str, phase: str) -> np.ndarray:
         image_file_path = os.path.join(
             self.processed_data_dir, phase, data_name, "images", file_name
         )
         image = np.load(image_file_path)
-        image = self._normalize_img(
-            image, self.mean_dict[data_name], self.std_dict[data_name]
-        )
+        # image = self._normalize_img(
+        #     image, self.mean_dict[data_name], self.std_dict[data_name]
+        # )
+        image = self._min_max_normalize_img(image, self.min_dict[data_name], 255)
         image = np.expand_dims(image.astype(np.float32), axis=-1)
-        image = torch.from_numpy(image).permute(2, 0, 1).float()
         return image
 
-    def _load_label(self, data_name: str, file_name: str, phase: str) -> torch.Tensor:
+    def _load_label(self, data_name: str, file_name: str, phase: str) -> np.ndarray:
         mask_file_path = os.path.join(
             self.processed_data_dir, phase, data_name, "labels", file_name
         )
         mask = np.load(mask_file_path)
         mask = np.expand_dims(mask.astype(np.float32), axis=-1)
-        mask = torch.from_numpy(mask > 0).permute(2, 0, 1).float()
 
         return mask
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         data_name = self.df.loc[idx, "data_name"]
         phase = self.df.loc[idx, "phase"]
-        input = torch.empty(0)
-        mask = torch.empty(0)
+        input = np.empty(0)
+        mask = np.empty(0)
         for slice_idx in range(self.config.slice_num):
             file_name = self.df.loc[idx, f"file_name_{slice_idx}"]
             slice_img = self._load_image(data_name, file_name, phase)
             slice_mask = self._load_label(data_name, file_name, phase)
             slice_img, slice_mask = self._get_random_crop_img(slice_img, slice_mask)
-            input = torch.cat([input, slice_img], dim=0)
-            mask = torch.cat([mask, slice_mask], dim=0)
+            if slice_idx == 0:
+                input = slice_img
+                mask = slice_mask
+            else:
+                input = np.concatenate([input, slice_img], axis=-1)
+                mask = np.concatenate([mask, slice_mask], axis=-1)
+        transformed = self.transform(image=input, mask=mask)
+        input = transformed["image"]
+        mask = transformed["mask"]
+        # input = input.transpose(2, 0, 1)
+        # mask = mask.transpose(2, 0, 1)
         return input, mask
 
 
