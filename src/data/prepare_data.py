@@ -110,12 +110,12 @@ def save_split_patch_image(config: ExpConfig, phase: str = "train"):
                 os.path.join(input_image_dir, file_name),
                 cv2.IMREAD_GRAYSCALE,
             )
-            image = image.astype(np.float32) / 255
+            image = image.astype(np.uint8)
             label = cv2.imread(
                 os.path.join(input_label_dir, file_name),
                 cv2.IMREAD_GRAYSCALE,
             )
-            label = (label > 0).astype(np.float32) / 255
+            label = (label > 0).astype(np.uint8)
             # patch sizeで分割
             h, w = image.shape
             h_split = h // stride_height
@@ -191,7 +191,7 @@ def run_prepare_data(config: ExpConfig) -> None:
     if config.phase == "train":
         print("processing train data")
         phase = "train"
-        # save_split_patch_image(config, phase)
+        save_split_patch_image(config, phase)
         df = make_dataset_df(config)
         df.to_csv(
             os.path.join(
@@ -204,7 +204,7 @@ def run_prepare_data(config: ExpConfig) -> None:
         make_debug_df(config, phase)
         print("processing valid data")
         phase = "valid"
-        # save_split_patch_image(config, phase)
+        save_split_patch_image(config, phase)
         df = make_dataset_df(config)
         df.to_csv(
             os.path.join(
