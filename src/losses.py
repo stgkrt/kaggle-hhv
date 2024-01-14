@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 
@@ -15,5 +16,10 @@ class DiceLoss(nn.Module):
 
         intersection = (inputs * targets).sum()
         dice = (2.0 * intersection + smooth) / (inputs.sum() + targets.sum() + smooth)
+        if torch.isnan(dice):
+            print("input", torch.isnan(inputs))
+            print("target", torch.isnan(targets))
+            print("intersection", torch.isnan(intersection))
+            raise RuntimeError
 
         return 1 - dice
