@@ -21,7 +21,8 @@
             "tamasfe.even-better-toml",
             "redhat.vscode-yaml",
             "njpwerner.autodocstring",
-            "vscodevim.vim"
+            "vscodevim.vim",
+            "ms-toolsai.jupyter"
         ],
         "settings": {
             "python.formatting.provider": "black",
@@ -37,5 +38,5 @@
         }
     }
   },
-  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} & sh script/setup_dev.sh"
+  "postCreateCommand": "git config --system --add safe.directory ${containerWorkspaceFolder} & sh script/setup_dev.sh"
 }
