@@ -10,8 +10,8 @@ from torchmetrics import MeanMetric
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from conf import ExpConfig
-from losses import DiceLoss
 from model._models import SimpleSegModel
+from model.losses import DiceLoss
 
 # MODEL_TYPE = Union[SimpleSegModel]
 
