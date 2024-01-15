@@ -5,13 +5,18 @@ from typing import Dict, List, Tuple
 import cv2
 import lightning as L
 import numpy as np
+import pandas as pd
 import torch
 from torchmetrics import MeanMetric
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+
+
 from conf import ExpConfig
 from model._models import SimpleSegModel
 from model.losses import DiceLoss
+from score.compute_score import add_size_columns, compute_surface_dice_score
+from valid import make_submit_df
 
 # MODEL_TYPE = Union[SimpleSegModel]
 
@@ -76,6 +81,19 @@ class ModelModule(L.LightningModule):
     def on_validation_epoch_end(self) -> None:
         self.log("val_loss_epoch", self.val_loss.compute())
         return
+
+    def on_train_end(self) -> None:
+        data_dir = os.path.join(self.config.input_data_dir, "train")
+        submit = make_submit_df(self, self.config.valid_data_name, data_dir)
+        submit.to_csv(os.path.join(self.config.save_dir, "oof.csv"), index=False)
+
+        data_id_list = submit["id"].unique().tolist()
+        label = pd.read_csv(self.config.label_df)
+        label = label[label["id"].isin(data_id_list)].reset_index(drop=True)
+        add_size_columns(label)
+        val_score = compute_surface_dice_score(submit, label)
+        self.logger.log_metrics({"val_score": val_score})
+        return super().on_train_end()
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.config.lr)

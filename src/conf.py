@@ -6,11 +6,11 @@ from typing import List
 @dataclass
 class ExpConfig:
     # common
-    debug: bool = False
+    debug: bool = True
     phase: str = "train"
     # experiment
-    exp_name: str = "exp001_diceloss_size512"  # type: ignore
-    exp_category: str = "baseline"  # type: ignore
+    exp_name: str = "exp001_making5"
+    exp_category: str = "baseline"
     seed: int = 42
     # dirs
     input_dir: str = "/kaggle/input"
@@ -37,8 +37,9 @@ class ExpConfig:
     valid_df: str = os.path.join(
         output_dir, f"valid_{stride_height}_{stride_width}.csv"
     )
-    train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_voi"])
-    valid_data_name: List[str] = field(default_factory=lambda: ["kidney_3_sparse"])
+    label_df = os.path.join(input_data_dir, "train_rles.csv")
+    train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_dense"])
+    valid_data_name: List[str] = field(default_factory=lambda: ["kidney_2"])
 
     # model
     model_name: str = "SegModel"
@@ -55,12 +56,15 @@ class ExpConfig:
     # train
     epochs: int = 10
     T_max: int = epochs
-    lr: float = 1e-3
-    eta_min: float = 1e-8
+    lr: float = 1e-4
+    eta_min: float = 1e-6
     # logger
     monitor: str = "val_loss"
     monitor_mode: str = "min"
     check_val_every_n_epoch: int = 1
+    # predict
+    overlap_rate: float = 0.2
+
     if debug:
         exp_name = "debug"
         exp_category = "debug"
@@ -71,6 +75,8 @@ class ExpConfig:
             output_dir, f"valid_{stride_height}_{stride_width}_debug.csv"
         )
         epochs = 2
+        train_data_name = field(default_factory=lambda: ["kidney_1_voi"])
+        valid_data_name = field(default_factory=lambda: ["kidney_3_sparse"])
 
 
 if __name__ == "__main__":
