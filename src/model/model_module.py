@@ -147,8 +147,8 @@ class ModelModule(L.LightningModule):
             np.ndarray: predicted image [H, W, C]
         """
         overlap_rate = self.config.overlap_rate
-        stride_height = int(self.config.img_height * overlap_rate)
-        stride_width = int(self.config.img_width * overlap_rate)
+        stride_height = int(self.config.img_height * (1 - overlap_rate))
+        stride_width = int(self.config.img_width * (1 - overlap_rate))
         h_stride_num = int(
             np.ceil((original_img.shape[0] - self.config.img_height) / stride_height)
             + 1
