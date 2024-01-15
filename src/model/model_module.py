@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import cv2
 import lightning as L
@@ -137,7 +137,7 @@ class ModelModule(L.LightningModule):
 
     def overlap_predict(
         self, original_img: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """overlapで指定した割合で重なるように画像を分割して推論する
 
         Args:
