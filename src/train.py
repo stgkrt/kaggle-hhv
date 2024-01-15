@@ -2,6 +2,7 @@ import os
 from dataclasses import asdict
 
 import lightning as L
+import torch
 from lightning import seed_everything
 from lightning.pytorch.callbacks import (
     LearningRateMonitor,
@@ -62,6 +63,16 @@ def run_train(config: ExpConfig) -> None:
         check_val_every_n_epoch=config.check_val_every_n_epoch,
     )
     trainer.fit(model, datamodule=datamodule)
+
+    # resave last weights
+    torch.save(model.state_dict(), os.path.join(config.save_dir, "last.pth"))
+    # resave best weights
+    best_checkpoint_path = trainer.checkpoint_callback.best_model_path
+    model.load_state_dict(torch.load(best_checkpoint_path)["state_dict"])
+    torch.save(model.state_dict(), os.path.join(config.save_dir, "best.pth"))
+    # ckptの削除
+    os.remove(os.path.join(config.save_dir, "last.ckpt"))
+    os.remove(best_checkpoint_path)
 
     return
 
