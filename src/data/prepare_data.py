@@ -126,24 +126,15 @@ def save_split_patch_image(config: ExpConfig, phase: str = "train"):
             for i in range(h_split):
                 for j in range(w_split):
                     # patchの範囲を計算
-                    this_patch_height_min = h_stride_offset + stride_height * i
-                    this_patch_width_min = w_stride_offset + stride_width * j
+                    h_start = h_stride_offset + stride_width * j
+                    w_start = w_stride_offset + stride_width * j
                     # maxは画像サイズを超えないようにする
-                    this_patch_height_max = this_patch_height_min + patch_height
-                    this_patch_width_max = this_patch_width_min + patch_width
-                    this_patch_height_max = min(this_patch_height_max, h)
-                    this_patch_width_max = min(this_patch_width_max, w)
+                    h_end = min(h_start + patch_height, h)
+                    w_end = min(w_start + patch_width, w)
 
                     # patchを切り出す
-                    image_patch = image[
-                        this_patch_height_min:this_patch_height_max,
-                        this_patch_width_min:this_patch_width_max,
-                    ]
-
-                    label_patch = label[
-                        this_patch_height_min:this_patch_height_max,
-                        this_patch_width_min:this_patch_width_max,
-                    ]
+                    image_patch = image[h_start:h_end, w_start:w_end]
+                    label_patch = label[h_start:h_end, w_start:w_end]
                     patch_filename = file_name.split(".")[0] + f"_{i}_{j}"
                     np.save(
                         os.path.join(processed_image_dir, patch_filename),
