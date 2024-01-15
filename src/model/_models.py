@@ -2,7 +2,6 @@ import os
 import sys
 
 import segmentation_models_pytorch as smp
-import torch
 import torch.nn as nn
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
@@ -35,10 +34,3 @@ class SimpleSegModel(nn.Module):
 if __name__ == "__main__":
     config = ExpConfig()
     model = SimpleSegModel(config)
-    # 下ので読み出せるけどあってない？
-    # weights = torch.load("/kaggle/working/debug/last.ckpt")["state_dict"]
-    # model.load_state_dict(weights, strict=False)
-
-    x = torch.randn(1, config.in_channels, config.img_height, config.img_width)
-    y = model(x)
-    print("output shape", y.shape)
