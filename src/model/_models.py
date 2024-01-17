@@ -34,3 +34,10 @@ class SimpleSegModel(nn.Module):
 if __name__ == "__main__":
     config = ExpConfig()
     model = SimpleSegModel(config)
+    import torch
+
+    input = torch.randn(
+        config.batch_size, config.in_channels, config.img_height, config.img_width
+    )
+    output = model(input)
+    print(output.shape)
