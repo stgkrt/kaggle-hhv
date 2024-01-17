@@ -2,7 +2,6 @@ import os
 import sys
 from typing import Dict, List, Tuple
 
-import cv2
 import lightning as L
 import numpy as np
 import pandas as pd
@@ -193,28 +192,34 @@ class ModelModule(L.LightningModule):
                 crop_img = self._pad_img_ifneed(
                     crop_img, self.config.img_height, self.config.img_width
                 )
-                crop_img = torch.from_numpy(crop_img).unsqueeze(0)  # [C, H, W]
-                crop_img = crop_img.unsqueeze(0)  # [B, C, H, W]
-                batch_input = torch.cat([batch_input, crop_img], dim=0)
-                batch_input_dict["h_start"].append(h_start)
-                batch_input_dict["w_start"].append(w_start)
-                batch_input_dict["h_end"].append(h_end)
-                batch_input_dict["w_end"].append(w_end)
-                if batch_input.shape[0] == self.config.batch_size:
-                    (
-                        batch_input,
-                        batch_input_dict,
-                        pred_img,
-                        pred_count_img,
-                    ) = self._pred_batch(
-                        batch_input, batch_input_dict, pred_img, pred_count_img
-                    )
-        (
-            batch_input,
-            batch_input_dict,
-            pred_img,
-            pred_count_img,
-        ) = self._pred_batch(batch_input, batch_input_dict, pred_img, pred_count_img)
+
+        if batch_input.shape[0] > 0:
+            crop_img = torch.from_numpy(crop_img)
+            crop_img = crop_img.unsqueeze(0)  # [C, H, W]
+            crop_img = crop_img.unsqueeze(0)  # [B, C, H, W]
+            batch_input = torch.cat([batch_input, crop_img], dim=0)
+            batch_input_dict["h_start"].append(h_start)
+            batch_input_dict["w_start"].append(w_start)
+            batch_input_dict["h_end"].append(h_end)
+            batch_input_dict["w_end"].append(w_end)
+            if batch_input.shape[0] >= self.config.batch_size:
+                (
+                    batch_input,
+                    batch_input_dict,
+                    pred_img,
+                    pred_count_img,
+                ) = self._pred_batch(
+                    batch_input, batch_input_dict, pred_img, pred_count_img
+                )
+        if batch_input.shape[0] > 0:
+            (
+                batch_input,
+                batch_input_dict,
+                pred_img,
+                pred_count_img,
+            ) = self._pred_batch(
+                batch_input, batch_input_dict, pred_img, pred_count_img
+            )
         pred_img = pred_img / pred_count_img
         pred_img = pred_img.astype(np.float32)
         return pred_img, pred_count_img
@@ -224,10 +229,12 @@ if __name__ == "__main__":
     config = ExpConfig()
     model = ModelModule(config)
     # これで読み出せる
-    model.load_state_dict(torch.load("/kaggle/working/exp001_making3/last.pth"))
-    # 1枚ずつ推論できる
-    image = cv2.imread(
-        "/kaggle/input/blood-vessel-segmentation/train/kidney_1_dense/images/0500.tif",
-        cv2.IMREAD_GRAYSCALE,
-    )
-    pred, pred_count_img = model.overlap_predict(image)
+    # model.load_state_dict(torch.load("/kaggle/working/exp001_making3/last.pth"))
+    # # 1枚ずつ推論できる
+
+    # import cv2
+    # image = cv2.imread(
+    #     "/kaggle/input/blood-vessel-segmentation/train/kidney_1_dense/images/0500.tif",
+    #     cv2.IMREAD_GRAYSCALE,
+    # )
+    # pred, pred_count_img = model.overlap_predict(image)
