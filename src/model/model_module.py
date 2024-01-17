@@ -83,7 +83,9 @@ class ModelModule(L.LightningModule):
 
     def on_train_end(self) -> None:
         data_dir = os.path.join(self.config.input_data_dir, "train")
-        submit = make_submit_df(self, self.config.valid_data_name, data_dir)
+        submit = make_submit_df(
+            self, self.config.valid_data_name, data_dir, self.config.minmax_df_path
+        )
         submit.to_csv(os.path.join(self.config.save_dir, "oof.csv"), index=False)
 
         data_id_list = submit["id"].unique().tolist()
@@ -192,25 +194,22 @@ class ModelModule(L.LightningModule):
                 crop_img = self._pad_img_ifneed(
                     crop_img, self.config.img_height, self.config.img_width
                 )
-
-        if batch_input.shape[0] > 0:
-            crop_img = torch.from_numpy(crop_img)
-            crop_img = crop_img.unsqueeze(0)  # [C, H, W]
-            crop_img = crop_img.unsqueeze(0)  # [B, C, H, W]
-            batch_input = torch.cat([batch_input, crop_img], dim=0)
-            batch_input_dict["h_start"].append(h_start)
-            batch_input_dict["w_start"].append(w_start)
-            batch_input_dict["h_end"].append(h_end)
-            batch_input_dict["w_end"].append(w_end)
-            if batch_input.shape[0] >= self.config.batch_size:
-                (
-                    batch_input,
-                    batch_input_dict,
-                    pred_img,
-                    pred_count_img,
-                ) = self._pred_batch(
-                    batch_input, batch_input_dict, pred_img, pred_count_img
-                )
+                crop_img = torch.from_numpy(crop_img).unsqueeze(0)  # [C, H, W]
+                crop_img = crop_img.unsqueeze(0)  # [B, C, H, W]
+                batch_input = torch.cat([batch_input, crop_img], dim=0)
+                batch_input_dict["h_start"].append(h_start)
+                batch_input_dict["w_start"].append(w_start)
+                batch_input_dict["h_end"].append(h_end)
+                batch_input_dict["w_end"].append(w_end)
+                if batch_input.shape[0] >= self.config.batch_size:
+                    (
+                        batch_input,
+                        batch_input_dict,
+                        pred_img,
+                        pred_count_img,
+                    ) = self._pred_batch(
+                        batch_input, batch_input_dict, pred_img, pred_count_img
+                    )
         if batch_input.shape[0] > 0:
             (
                 batch_input,
