@@ -6,10 +6,11 @@ from typing import List
 @dataclass
 class ExpConfig:
     # common
-    debug: bool = True
+    debug: bool = False
     phase: str = "train"
     # experiment
-    exp_name: str = "exp001_making5"
+    exp_name: str = "exp001_validscore"
+    # exp_name: str = "exp002_seresnext50_32x4d"
     exp_category: str = "baseline"
     seed: int = 42
     # dirs
@@ -30,6 +31,7 @@ class ExpConfig:
     ## loader
     slice_num: int = 1
     batch_size: int = 32
+    # batch_size: int = 8
     num_workers: int = 2
     train_df: str = os.path.join(
         output_dir, f"train_{stride_height}_{stride_width}.csv"
@@ -40,10 +42,11 @@ class ExpConfig:
     label_df = os.path.join(input_data_dir, "train_rles.csv")
     train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_dense"])
     valid_data_name: List[str] = field(default_factory=lambda: ["kidney_2"])
-
+    minmax_df_path: str = os.path.join(output_dir, "centerslice_maxmean.csv")
     # model
     model_name: str = "SegModel"
     encoder_name: str = "tf_efficientnet_b0"
+    # encoder_name: str = "seresnext50_32x4d"
     pretrained: bool = True
     in_channels: int = slice_num
     out_channels: int = slice_num

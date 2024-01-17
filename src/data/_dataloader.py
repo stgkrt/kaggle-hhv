@@ -11,6 +11,12 @@ from conf import ExpConfig
 from data._augmentations import get_transforms
 
 
+def min_max_normalize_img(image: np.ndarray, min: float, max: float) -> np.ndarray:
+    image = image.astype(np.float32)
+    image = (image - min) / (max - min)
+    return image
+
+
 class SegDataset(Dataset):
     def __init__(
         self, df: pd.DataFrame, config: ExpConfig, phase: str = "train"
@@ -20,27 +26,7 @@ class SegDataset(Dataset):
         self.processed_data_dir = f"{self.config.processed_data_dir}"
         self.processed_data_dir += f"_{config.stride_height}_{config.stride_width}"
         self.transform = get_transforms(config, phase)
-        self.mean_dict = {
-            "kidney_1_dense": 91.522667,
-            "kidney_2": 131.317631,
-            "kidney_3_dense": 76.838148,
-            "kidney_3_sparse": 76.838148,  # dummy
-            "kidney_1_voi": 91.522667,  # dummy
-        }
-        self.std_dict = {
-            "kidney_1_dense": 11.151333,
-            "kidney_2": 9.339552,
-            "kidney_3_dense": 2.465148,
-            "kidney_3_sparse": 2.465148,  # dummy
-            "kidney_1_voi": 11.151333,  # dummy
-        }
-        self.min_dict = {
-            "kidney_1_dense": 20,
-            "kidney_2": 35,
-            "kidney_3_dense": 40,
-            "kidney_3_sparse": 40,  # dummy
-            "kidney_1_voi": 20,  # dummy
-        }
+        self.maxmin_df = pd.read_csv(config.minmax_df_path)
 
     def __len__(self) -> int:
         return len(self.df)
@@ -52,13 +38,6 @@ class SegDataset(Dataset):
         # if std != 0:
         #     image = (image - mean) / std
         image = (image - mean) / std
-        return image
-
-    def _min_max_normalize_img(
-        self, image: np.ndarray, min: float, max: float
-    ) -> np.ndarray:
-        image = image.astype(np.float32)
-        image = (image - min) / (max - min)
         return image
 
     def _get_random_crop_img(
@@ -87,8 +66,14 @@ class SegDataset(Dataset):
         image = np.load(image_file_path)
         # image = self._normalize_img(
         #     image, self.mean_dict[data_name], self.std_dict[data_name]
-        # )
-        image = self._min_max_normalize_img(image, self.min_dict[data_name], 255)
+        # # )
+        max_value = self.maxmin_df[self.maxmin_df["data_name"] == data_name][
+            "max"
+        ].values[0]
+        min_value = self.maxmin_df[self.maxmin_df["data_name"] == data_name][
+            "min"
+        ].values[0]
+        image = min_max_normalize_img(image, min_value, max_value)
         image = np.expand_dims(image.astype(np.float32), axis=-1)
         return image
 
