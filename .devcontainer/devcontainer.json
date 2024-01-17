@@ -29,6 +29,7 @@
             "python.formatting.blackArgs": ["--config=${workspacefolder}/setup.cfg"],
             "python.linting.mypyArgs": ["--config=${workspacefolder}/setup.cfg"],
             "python.linting.flake8Args": ["--config=${workspacefolder}/setup.cfg"],
+            "mypy-type-checker.args": ["--config-file=${workspacefolder}/setup.cfg"],
             "[python]" : {
                 "editor.formatOnSave": true,
                 "editor.codeActionsOnSave": {
@@ -38,5 +39,6 @@
         }
     }
   },
-  "postCreateCommand": "git config --system --add safe.directory ${containerWorkspaceFolder} & sh script/setup_dev.sh"
+  "postAttachCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "postCreateCommand": "sh script/setup_dev.sh"
 }
