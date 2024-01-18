@@ -2,9 +2,9 @@ import os
 import sys
 from typing import Dict, List, Tuple
 
-import lightning as L
 import numpy as np
 import pandas as pd
+import pytorch_lightning as L
 import torch
 from torchmetrics import MeanMetric
 
@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 
 from conf import ExpConfig
 from model._models import SimpleSegModel
-from model.losses import DiceLoss
+from model.losses import DiceGradLoss  # , DiceLoss
 from score.compute_score import add_size_columns, compute_surface_dice_score
 from valid import make_submit_df
 
@@ -34,7 +34,8 @@ class ModelModule(L.LightningModule):
         self.config = config
         self.model = get_model(config)
         # self.loss = nn.BCEWithLogitsLoss()
-        self.loss = DiceLoss()
+        # self.loss = DiceLoss()
+        self.loss = DiceGradLoss()
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
 
@@ -82,9 +83,10 @@ class ModelModule(L.LightningModule):
         return
 
     def on_train_end(self) -> None:
+        print("train end. start computing validation score")
         data_dir = os.path.join(self.config.input_data_dir, "train")
         submit = make_submit_df(
-            self, self.config.valid_data_name, data_dir, self.config.minmax_df_path
+            self, data_dir, self.config.valid_data_name, self.config.minmax_df_path
         )
         submit.to_csv(os.path.join(self.config.save_dir, "oof.csv"), index=False)
 
@@ -95,6 +97,16 @@ class ModelModule(L.LightningModule):
         val_score = compute_surface_dice_score(submit, label)
         self.logger.log_metrics({"val_score": val_score})
         return super().on_train_end()
+
+    def inference(self, data_dir: str, data_name_list: List[str]) -> pd.DataFrame:
+        submit = make_submit_df(
+            self,
+            data_dir,
+            data_name_list,
+            self.config.minmax_df_path,
+            self.config.threshold,
+        )
+        return submit
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.config.lr)

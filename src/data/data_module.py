@@ -1,7 +1,7 @@
 import os
 import sys
 
-import lightning as L
+import pytorch_lightning as L
 import pandas as pd
 from torch.utils.data import DataLoader
 

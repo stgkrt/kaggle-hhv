@@ -1,10 +1,10 @@
 import os
 from dataclasses import asdict
 
-import lightning as L
+import pytorch_lightning as L
 import torch
-from lightning import seed_everything
-from lightning.pytorch.callbacks import (
+from pytorch_lightning import seed_everything
+from pytorch_lightning.callbacks import (
     LearningRateMonitor,
     ModelCheckpoint,
     RichModelSummary,
@@ -20,9 +20,12 @@ from src.model.model_module import ModelModule
 def run_train(config: ExpConfig) -> None:
     config = ExpConfig()
     if not os.path.exists(config.save_dir):
+        print(config.save_dir)
         os.makedirs(config.save_dir)
+        os.makedirs(config.save_weight_dir)
     elif config.debug:
         os.makedirs(config.save_dir, exist_ok=True)
+        os.makedirs(config.save_weight_dir, exist_ok=True)
     else:
         raise RuntimeError(f"{config.save_dir} already exists")
     seed_everything(config.seed)
@@ -65,11 +68,11 @@ def run_train(config: ExpConfig) -> None:
     trainer.fit(model, datamodule=datamodule)
 
     # resave last weights
-    torch.save(model.state_dict(), os.path.join(config.save_dir, "last.pth"))
+    torch.save(model.state_dict(), os.path.join(config.save_weight_dir, "last.pth"))
     # resave best weights
     best_checkpoint_path = trainer.checkpoint_callback.best_model_path
     model.load_state_dict(torch.load(best_checkpoint_path)["state_dict"])
-    torch.save(model.state_dict(), os.path.join(config.save_dir, "best.pth"))
+    torch.save(model.state_dict(), os.path.join(config.save_weight_dir, "best.pth"))
     # ckptの削除
     os.remove(os.path.join(config.save_dir, "last.ckpt"))
     os.remove(best_checkpoint_path)
