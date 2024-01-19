@@ -6,45 +6,37 @@ import numpy as np
 import pandas as pd
 import pytorch_lightning as L
 import torch
-from torchmetrics import MeanMetric
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 
 from conf import ExpConfig
 from model._models import SimpleSegModel
-from model.losses import DiceGradLoss  # , DiceLoss
+from model.losses import set_loss
 from score.compute_score import add_size_columns, compute_surface_dice_score
 from valid import make_submit_df
 
 # MODEL_TYPE = Union[SimpleSegModel]
 
 
-def get_model(config: ExpConfig) -> SimpleSegModel:
+def get_model(config: ExpConfig, phase: str = "train") -> SimpleSegModel:
     if config.model_name == "SegModel":
-        model = SimpleSegModel(config)
+        model = SimpleSegModel(config, phase)
     else:
         raise NotImplementedError
     return model
 
 
 class ModelModule(L.LightningModule):
-    def __init__(self, config: ExpConfig) -> None:
+    def __init__(self, config: ExpConfig, phase: str = "train") -> None:
         super().__init__()
         self.config = config
-        self.model = get_model(config)
-        # self.loss = nn.BCEWithLogitsLoss()
-        # self.loss = DiceLoss()
-        self.loss = DiceGradLoss()
-        self.train_loss = MeanMetric()
-        self.val_loss = MeanMetric()
+        self.model = get_model(config, phase)
+        self.loss = set_loss(config)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.model(x)
         return x
-
-    def on_train_start(self) -> None:
-        self.val_loss.reset()
 
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, y = batch
@@ -57,7 +49,6 @@ class ModelModule(L.LightningModule):
             on_epoch=True,
             prog_bar=True,
         )
-        self.train_loss(loss)
         return loss
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
@@ -71,16 +62,7 @@ class ModelModule(L.LightningModule):
             on_epoch=True,
             prog_bar=True,
         )
-        self.val_loss(loss)
         return loss
-
-    def on_train_epoch_end(self) -> None:
-        self.log("train_loss_epoch", self.train_loss.compute())
-        return
-
-    def on_validation_epoch_end(self) -> None:
-        self.log("val_loss_epoch", self.val_loss.compute())
-        return
 
     def on_train_end(self) -> None:
         print("train end. start computing validation score")

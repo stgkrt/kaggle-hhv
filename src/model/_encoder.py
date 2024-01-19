@@ -14,11 +14,15 @@ class SimpleTimmEncoder(nn.Module):
     timm based encoder(check timm.list_models() for available models)
     """
 
-    def __init__(self, config: ExpConfig):
+    def __init__(self, config: ExpConfig, phase: str = "train"):
         super().__init__()
+        if phase == "train":
+            pretrained = True
+        else:
+            pretrained = False
         self.encoder = timm.create_model(
             config.encoder_name,
-            pretrained=config.pretrained,
+            pretrained=pretrained,
             in_chans=config.in_channels,
             features_only=True,
         )
