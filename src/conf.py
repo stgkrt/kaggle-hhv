@@ -6,17 +6,17 @@ from typing import List
 @dataclass
 class ExpConfig:
     # common
-    debug: bool = True
+    debug: bool = False
     phase: str = "train"
     # experiment
     # exp_name: str = "exp002_Gradloss"
-    exp_name: str = "exp002_seresnext50_32x4d_Gradloss02"
+    exp_name: str = "exp002_seresnext50_32x4d_Gradloss05"
     exp_category: str = "baseline"
     seed: int = 42
     # model
     model_name: str = "SegModel"
-    encoder_name: str = "tf_efficientnet_b0"
-    # encoder_name: str = "seresnext50_32x4d"
+    # encoder_name: str = "tf_efficientnet_b0"
+    encoder_name: str = "seresnext50_32x4d"
     pretrained: bool = True
     in_channels: int = 1
     out_channels: int = 1
@@ -58,10 +58,11 @@ class ExpConfig:
     minmax_df_path: str = os.path.join(output_dir, "centerslice_maxmean.csv")
 
     # train
-    epochs: int = 10
+    epochs: int = 30
     T_max: int = epochs
     lr: float = 1e-4
     eta_min: float = 1e-6
+    loss_type: str = "dice_grad"
     # logger
     monitor: str = "val_loss"
     monitor_mode: str = "min"
