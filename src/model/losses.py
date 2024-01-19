@@ -1,6 +1,12 @@
+import os
+import sys
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from conf import ExpConfig
 
 
 class DiceLoss(nn.Module):
@@ -78,4 +84,16 @@ class DiceGradLoss(nn.Module):
     def forward(self, output, gt_img):
         dice_loss = self.dice_loss(output, gt_img)
         grad_loss = self.grad_loss(output, gt_img)
-        return dice_loss + grad_loss
+        return dice_loss + 0.5 * grad_loss
+
+
+def set_loss(config: ExpConfig) -> nn.Module:
+    if config.loss_type == "dice":
+        return DiceLoss()
+    elif config.loss_type == "grad":
+        return GradLoss()
+    elif config.loss_type == "dice_grad":
+        return DiceGradLoss()
+    else:
+        print(f"loss {config.loss} is not supported")
+        raise NotImplementedError
