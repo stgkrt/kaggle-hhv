@@ -25,7 +25,9 @@ def save_centerslice_maxmean_df(
         img_path = image_list[center_idx]
         img = cv2.imread(img_path)
         stack_img = None
-        for idx in tqdm(range(center_idx - stride_width, center_idx + stride_width)):
+        for idx in tqdm(
+            range(center_idx - stride_width, center_idx + stride_width + 1)
+        ):
             img_path = image_list[idx]
             img = cv2.imread(img_path)
             if stack_img is None:
