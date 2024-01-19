@@ -11,9 +11,9 @@ from model._encoder import SimpleTimmEncoder
 
 
 class SimpleSegModel(nn.Module):
-    def __init__(self, config: ExpConfig):
+    def __init__(self, config: ExpConfig, phase: str = "train"):
         super().__init__()
-        self.encoder = SimpleTimmEncoder(config)
+        self.encoder = SimpleTimmEncoder(config, phase)
         config.encoder_channels = self.encoder.get_encoder_channels()
         config.decoder_channels = config.encoder_channels[::-1]
         self.decoder = SimpleUnetDecoder(config)
