@@ -17,13 +17,11 @@ def save_centerslice_maxmean_df(
         print(data_path)
         data_name = os.path.split(data_path)[-1]
         print(data_name)
-        image_list = sorted(glob(os.path.join(data_path, "images", "*")))
+        image_list = sorted(glob(os.path.join(data_path, "images", "*.tif")))
         if len(image_list) == 0:
             continue
         center_idx = len(image_list) // 2
         stride_width = int(len(image_list) * use_data_ratio / 2)
-        img_path = image_list[center_idx]
-        img = cv2.imread(img_path)
         stack_img = None
         for idx in tqdm(
             range(center_idx - stride_width, center_idx + stride_width + 1)
