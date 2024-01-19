@@ -13,7 +13,10 @@ from data._augmentations import get_transforms
 
 def min_max_normalize_img(image: np.ndarray, min: float, max: float) -> np.ndarray:
     image = image.astype(np.float32)
-    image = (image - min) / (max - min)
+    if max != min:
+        image = (image - min) / (max - min)
+    else:
+        image = image - min
     return image
 
 
