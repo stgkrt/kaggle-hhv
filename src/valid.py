@@ -24,16 +24,17 @@ def make_submit_df(
     data_id_list = []
     rle_list = []
     max_min_df = pd.read_csv(max_min_df_path)
-    for data_name in data_name_list:
+    for data_name in sorted(data_name_list):
         slice_id_list = sorted(
             [
                 os.path.basename(path).split(".")[0]
                 for path in glob(os.path.join(data_dir, f"{data_name}/images/*.tif"))
             ]
         )
-        print(f"predicting... => {data_name}, slice num: {len(slice_id_list)}")
-        max_value = max_min_df.query(f"data_name == '{data_name}'")["max"].values[0]
-        min_value = max_min_df.query(f"data_name == '{data_name}'")["min"].values[0]
+        print(f"¥n predicting... => {data_name}, slice num: {len(slice_id_list)}")
+        data_values = max_min_df[max_min_df["data_name"] == data_name]
+        max_value = data_values["max"].values[0]
+        min_value = data_values["min"].values[0]
         start_time = time.time()
         for idx, slice_id in enumerate(slice_id_list):
             image = cv2.imread(
