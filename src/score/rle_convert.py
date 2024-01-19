@@ -12,7 +12,10 @@ def rle_encode(img):
     pixels = np.concatenate([[0], pixels, [0]])
     runs = np.where(pixels[1:] != pixels[:-1])[0] + 1
     runs[1::2] -= runs[::2]
-    return " ".join(str(x) for x in runs)
+    rle = " ".join(str(r) for r in runs)
+    if rle == "":
+        rle = "1 0"
+    return rle
 
 
 def rle_decode(mask_rle: str, shape: tuple) -> np.array:
