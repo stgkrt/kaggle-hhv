@@ -23,7 +23,7 @@ def run_train(config: ExpConfig) -> None:
     if not os.path.exists(config.save_dir):
         print(config.save_dir)
         os.makedirs(config.save_dir)
-        os.makedirs(config.save_weight_dir)
+        os.makedirs(config.save_weight_dir, exist_ok=True)
     elif config.debug:
         os.makedirs(config.save_dir, exist_ok=True)
         os.makedirs(config.save_weight_dir, exist_ok=True)
