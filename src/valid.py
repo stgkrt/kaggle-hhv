@@ -28,17 +28,17 @@ def make_submit_df(
         slice_id_list = sorted(
             [
                 os.path.basename(path).split(".")[0]
-                for path in glob(os.path.join(data_dir, f"{data_name}/images/*.tif"))
+                for path in glob(os.path.join(data_dir, data_name, "images", "*.tif"))
             ]
         )
-        print(f"¥n predicting... => {data_name}, slice num: {len(slice_id_list)}")
+        print(f"\n predicting... => {data_name}, slice num: {len(slice_id_list)}")
         data_values = max_min_df[max_min_df["data_name"] == data_name]
         max_value = data_values["max"].values[0]
         min_value = data_values["min"].values[0]
         start_time = time.time()
         for idx, slice_id in enumerate(slice_id_list):
             image = cv2.imread(
-                os.path.join(data_dir, f"{data_name}/images/{slice_id}.tif"),
+                os.path.join(data_dir, data_name, "images", f"{slice_id}.tif"),
                 cv2.IMREAD_GRAYSCALE,
             )
             image = min_max_normalize_img(image, min_value, max_value)
