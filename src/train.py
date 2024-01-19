@@ -3,6 +3,7 @@ from dataclasses import asdict
 
 import pytorch_lightning as L
 import torch
+import yaml  # type: ignore
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import (
     LearningRateMonitor,
@@ -29,6 +30,10 @@ def run_train(config: ExpConfig) -> None:
     else:
         raise RuntimeError(f"{config.save_dir} already exists")
     seed_everything(config.seed)
+
+    # save config
+    with open(os.path.join(config.save_weight_dir, "config.yaml"), "w") as f:
+        yaml.dump(asdict(config), f)
 
     datamodule = DataModule(config)
     model = ModelModule(config)
@@ -68,7 +73,7 @@ def run_train(config: ExpConfig) -> None:
     trainer.fit(model, datamodule=datamodule)
 
     # resave last weights
-    torch.save(model.state_dict(), os.path.join(config.save_weight_dir, "last.pth"))
+    # torch.save(model.state_dict(), os.path.join(config.save_weight_dir, "last.pth"))
     # resave best weights
     best_checkpoint_path = trainer.checkpoint_callback.best_model_path
     model.load_state_dict(torch.load(best_checkpoint_path)["state_dict"])
