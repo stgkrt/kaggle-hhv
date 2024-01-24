@@ -1,3 +1,4 @@
+import gc
 import os
 from glob import glob
 
@@ -8,24 +9,24 @@ from tqdm import tqdm
 
 
 def save_centerslice_maxmean_df(
-    data_dir: str, save_dir: str, use_data_ratio: float = 0.1
+    data_dir: str, save_dir: str, use_data_num: float = 100
 ) -> pd.DataFrame:
     data_path_list = glob(os.path.join(data_dir, "*"))
     dataname_list, mean_list, std_list = [], [], []
     max_list, min_list = [], []
-    for data_path in data_path_list:
+    for data_path in sorted(data_path_list):
         print(data_path)
         data_name = os.path.split(data_path)[-1]
         print(data_name)
         image_list = sorted(glob(os.path.join(data_path, "images", "*.tif")))
         if len(image_list) == 0:
             continue
-        center_idx = len(image_list) // 2
-        stride_width = int(len(image_list) * use_data_ratio / 2)
+        if len(image_list) < use_data_num:
+            use_data_num = len(image_list)
+        stride = int(len(image_list) / use_data_num)
+        print(f"image num: {len(image_list)}, stride: {stride}")
         stack_img = None
-        for idx in tqdm(
-            range(center_idx - stride_width, center_idx + stride_width + 1)
-        ):
+        for idx in tqdm(range(0, len(image_list), stride)):
             img_path = image_list[idx]
             img = cv2.imread(img_path)
             if stack_img is None:
@@ -41,6 +42,8 @@ def save_centerslice_maxmean_df(
         max_list.append(np.max(stack_img))
         min_list.append(np.min(stack_img))
 
+        del stack_img
+        gc.collect()
     df = pd.DataFrame(
         {
             "data_name": dataname_list,
@@ -58,6 +61,6 @@ def save_centerslice_maxmean_df(
 if __name__ == "__main__":
     train_dir = "/kaggle/input/blood-vessel-segmentation/train"
     save_dir = "/kaggle/working"
-    use_data_ratio = 0.1
-    df = save_centerslice_maxmean_df(train_dir, save_dir, use_data_ratio)
+    use_data_num = 300
+    df = save_centerslice_maxmean_df(train_dir, save_dir, use_data_num)
     print(df)
