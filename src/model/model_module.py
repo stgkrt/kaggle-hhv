@@ -68,7 +68,12 @@ class ModelModule(L.LightningModule):
         print("train end. start computing validation score")
         data_dir = os.path.join(self.config.input_data_dir, "train")
         submit = make_submit_df(
-            self, data_dir, self.config.valid_data_name, self.config.minmax_df_path
+            self,
+            data_dir,
+            self.config.valid_data_name,
+            self.config.minmax_df_path,
+            threshold=self.config.threshold,
+            object_min_size=self.config.object_min_size,
         )
         submit.to_csv(os.path.join(self.config.save_dir, "oof.csv"), index=False)
 
@@ -86,7 +91,8 @@ class ModelModule(L.LightningModule):
             data_dir,
             data_name_list,
             self.config.minmax_df_path,
-            self.config.threshold,
+            threshold=self.config.threshold,
+            object_min_size=self.config.object_min_size,
         )
         return submit
 

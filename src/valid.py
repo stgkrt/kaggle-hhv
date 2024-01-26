@@ -5,12 +5,12 @@ from glob import glob
 from typing import List
 
 import cv2
-import numpy as np
 import pandas as pd
 from pytorch_lightning import LightningModule
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from data._dataloader import min_max_normalize_img
+from processing.postprocess import remove_small_objects
 from score.rle_convert import rle_encode
 
 
@@ -20,6 +20,7 @@ def make_submit_df(
     data_name_list: List[str],
     max_min_df_path: str,
     threshold: float = 0.5,
+    object_min_size: int = 10,
 ) -> pd.DataFrame:
     data_id_list = []
     rle_list = []
@@ -43,8 +44,9 @@ def make_submit_df(
             )
             image = min_max_normalize_img(image, min_value, max_value)
 
-            pred, pred_counts = model.overlap_predict(image)
-            rle = rle_encode((pred > threshold).astype(np.uint8))
+            pred, _ = model.overlap_predict(image)
+            pred = remove_small_objects(pred, object_min_size, threshold)
+            rle = rle_encode(pred)
             data_id_list.append(f"{data_name}_{slice_id}")
             rle_list.append(rle)
             if idx % 100 == 0:
