@@ -6,17 +6,18 @@ from typing import List
 @dataclass
 class ExpConfig:
     # common
-    debug: bool = False
+    debug: bool = True
     phase: str = "train"
     # experiment
     # exp_name: str = "exp002_Gradloss"
-    exp_name: str = "exp002_seresnext50_32x4d_Gradloss05"
+    exp_name: str = "exp006_removesmallobj"
+    # exp_name: str = "exp003_Gradloss05"
     exp_category: str = "baseline"
     seed: int = 42
     # model
     model_name: str = "SegModel"
-    # encoder_name: str = "tf_efficientnet_b0"
-    encoder_name: str = "seresnext50_32x4d"
+    encoder_name: str = "tf_efficientnet_b0"
+    # encoder_name: str = "seresnext50_32x4d"
     pretrained: bool = True
     in_channels: int = 1
     out_channels: int = 1
@@ -53,12 +54,24 @@ class ExpConfig:
         output_dir, f"valid_{stride_height}_{stride_width}.csv"
     )
     label_df = os.path.join(input_data_dir, "train_rles.csv")
-    train_data_name: List[str] = field(default_factory=lambda: ["kidney_1_dense"])
-    valid_data_name: List[str] = field(default_factory=lambda: ["kidney_2"])
+    train_data_name: List[str] = field(
+        default_factory=lambda: [
+            "kidney_1_dense",
+            # "kidney_1_voi",
+            # "kidney_2",
+            # "kidney_3_sparse",
+        ]
+    )
+    valid_data_name: List[str] = field(
+        default_factory=lambda: [
+            # "kidney_1_dense",
+            "kidney_2"
+        ]
+    )
     minmax_df_path: str = os.path.join(output_dir, "centerslice_maxmean.csv")
 
     # train
-    epochs: int = 30
+    epochs: int = 10
     T_max: int = epochs
     lr: float = 1e-4
     eta_min: float = 1e-6
@@ -70,6 +83,7 @@ class ExpConfig:
     # predict
     overlap_rate: float = 0.2
     threshold: float = 0.5
+    object_min_size: int = 3
     if encoder_name == "seresnext50_32x4d":
         batch_size = 8
     if debug:
