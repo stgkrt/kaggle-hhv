@@ -140,6 +140,7 @@ class ModelModule(L.LightningModule):
     ) -> tuple[torch.Tensor, dict[str, List[int]], np.ndarray, np.ndarray]:
         batch_input = batch_input.to(self.device)
         preds = self.model(batch_input)
+        preds = torch.sigmoid(preds)
         for i in range(batch_input.shape[0]):
             h_start = batch_input_dict["h_start"][i]
             w_start = batch_input_dict["w_start"][i]
