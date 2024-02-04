@@ -118,20 +118,24 @@ def save_split_patch_image(config: ExpConfig, phase: str = "train"):
             label = (label > 0).astype(np.uint8)
             # patch sizeで分割
             h, w = image.shape
-            h_split = h // stride_height
-            w_split = w // stride_width
+            h_split = np.floor(h / stride_height).astype(int)
+            w_split = np.floor(w / stride_width).astype(int)
             # 中央を取り出せるように全体を少しstrideさせる
-            h_stride_offset = (h - stride_height * h_split) // 2
-            w_stride_offset = (w - stride_width * w_split) // 2
+            h_stride_offset = max(0, (h - (stride_height * h_split)) // 2)
+            w_stride_offset = max(0, (w - (stride_width * w_split)) // 2)
             for i in range(h_split):
                 for j in range(w_split):
                     # patchの範囲を計算
-                    h_start = h_stride_offset + stride_width * j
-                    w_start = w_stride_offset + stride_width * j
+                    h_start = h_stride_offset + (stride_width * i)
+                    w_start = w_stride_offset + (stride_width * j)
                     # maxは画像サイズを超えないようにする
                     h_end = min(h_start + patch_height, h)
                     w_end = min(w_start + patch_width, w)
-
+                    if (
+                        h_end - h_start < stride_height
+                        or w_end - w_start < stride_width
+                    ):
+                        continue
                     # patchを切り出す
                     image_patch = image[h_start:h_end, w_start:w_end]
                     label_patch = label[h_start:h_end, w_start:w_end]
@@ -209,7 +213,7 @@ def run_prepare_data(config: ExpConfig) -> None:
     else:
         print("processing test data")
         phase = "test"
-        save_split_patch_image(config)
+        # save_split_patch_image(config)
         df = make_dataset_df(config)
         df.to_csv(os.path.join("/kaggle", "working", f"{phase}.csv"), index=False)
     return
@@ -227,9 +231,9 @@ def make_debug_df(config: ExpConfig, phase="train"):
 
     print("data name unique", df["data_name"].unique())
     if phase == "train":
-        use_data_name = "kidney_1_voi"
+        use_data_name = "kidney_1_dense"
     else:
-        use_data_name = "kidney_3_sparse"
+        use_data_name = "kidney_2"
     print("use data name:", use_data_name)
     df = df[df["data_name"] == use_data_name]
     df = df.sample(1000).reset_index(drop=True)
