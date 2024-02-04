@@ -6,23 +6,23 @@ from typing import List
 @dataclass
 class ExpConfig:
     # common
-    debug: bool = True
+    debug: bool = False
     phase: str = "train"
     # experiment
     # exp_name: str = "exp002_Gradloss"
-    exp_name: str = "exp006_removesmallobj"
+    exp_name: str = "exp009_512_train13_percentail"
     # exp_name: str = "exp003_Gradloss05"
     exp_category: str = "baseline"
     seed: int = 42
     # model
     model_name: str = "SegModel"
-    encoder_name: str = "tf_efficientnet_b0"
-    # encoder_name: str = "seresnext50_32x4d"
+    # encoder_name: str = "tf_efficientnet_b0"
+    encoder_name: str = "seresnext50_32x4d"
     pretrained: bool = True
     in_channels: int = 1
     out_channels: int = 1
     use_batchnorm: bool = True
-    dropout: float = 0.2
+    dropout: float = 0.3
     encoder_channels: List[int] = field(
         default_factory=lambda: [64, 128, 256, 512, 512]
     )
@@ -38,6 +38,8 @@ class ExpConfig:
     # data
     img_height: int = 512
     img_width: int = 512
+    # img_height: int = 1024
+    # img_width: int = 1024
     ## preparedata
     stride_height: int = img_height
     stride_width: int = img_width
@@ -59,7 +61,7 @@ class ExpConfig:
             "kidney_1_dense",
             # "kidney_1_voi",
             # "kidney_2",
-            # "kidney_3_sparse",
+            "kidney_3_sparse",
         ]
     )
     valid_data_name: List[str] = field(
@@ -85,7 +87,7 @@ class ExpConfig:
     threshold: float = 0.5
     object_min_size: int = 3
     if encoder_name == "seresnext50_32x4d":
-        batch_size = 8
+        batch_size = 2
     if debug:
         exp_name = "debug"
         exp_category = "debug"
@@ -98,8 +100,8 @@ class ExpConfig:
             output_dir, f"valid_{stride_height}_{stride_width}_debug.csv"
         )
         epochs = 2
-        train_data_name = field(default_factory=lambda: ["kidney_1_voi"])
-        valid_data_name = field(default_factory=lambda: ["kidney_3_sparse"])
+        train_data_name = field(default_factory=lambda: ["kidney_1_dense"])
+        valid_data_name = field(default_factory=lambda: ["kidney_2"])
 
 
 if __name__ == "__main__":
