@@ -79,7 +79,7 @@ def run_train(config: ExpConfig) -> None:
     model.load_state_dict(torch.load(best_checkpoint_path)["state_dict"])
     torch.save(model.state_dict(), os.path.join(config.save_weight_dir, "best.pth"))
     # ckptの削除
-    os.remove(os.path.join(config.save_dir, "last.ckpt"))
+    # os.remove(os.path.join(config.save_dir, "last.ckpt"))
     os.remove(best_checkpoint_path)
 
     return
