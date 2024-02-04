@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, Dataset
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 from conf import ExpConfig
 from data._augmentations import get_transforms
+from processing.preprocess import clip_underover_value
 
 
 def min_max_normalize_img(image: np.ndarray, min: float, max: float) -> np.ndarray:
@@ -67,6 +68,10 @@ class SegDataset(Dataset):
             self.processed_data_dir, phase, data_name, "images", file_name
         )
         image = np.load(image_file_path)
+        image = image.astype(np.float32)
+        image = torch.from_numpy(image)
+        image = clip_underover_value(image, percent=0.1)
+        image = image.numpy()
         # image = self._normalize_img(
         #     image, self.mean_dict[data_name], self.std_dict[data_name]
         # # )
@@ -117,7 +122,7 @@ if __name__ == "__main__":
     config = ExpConfig()
     train_df_path = os.path.join(
         config.output_dir,
-        f"{config.phase}_{config.stride_height}_{config.stride_width}_debug.csv",
+        f"{config.phase}_{config.stride_height}_{config.stride_width}.csv",
     )
     print(train_df_path)
     df = pd.read_csv(train_df_path)

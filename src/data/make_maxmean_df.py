@@ -5,7 +5,10 @@ from glob import glob
 import cv2
 import numpy as np
 import pandas as pd
+import torch
 from tqdm import tqdm
+
+from src.processing.preprocess import clip_underover_value
 
 
 def save_centerslice_maxmean_df(
@@ -29,6 +32,9 @@ def save_centerslice_maxmean_df(
         for idx in tqdm(range(0, len(image_list), stride)):
             img_path = image_list[idx]
             img = cv2.imread(img_path)
+            img_torch = torch.from_numpy(img).permute(2, 0, 1)
+            img_torch = clip_underover_value(img_torch, percent=0.1)
+            img = img_torch.numpy().astype(np.uint8)
             if stack_img is None:
                 stack_img = np.expand_dims(img, axis=0)
             else:
