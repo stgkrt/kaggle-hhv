@@ -6,11 +6,13 @@ from typing import List
 
 import cv2
 import pandas as pd
+import torch
 from pytorch_lightning import LightningModule
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from data._dataloader import min_max_normalize_img
 from processing.postprocess import remove_small_objects
+from processing.preprocess import clip_underover_value
 from score.rle_convert import rle_encode
 
 
@@ -42,6 +44,10 @@ def make_submit_df(
                 os.path.join(data_dir, data_name, "images", f"{slice_id}.tif"),
                 cv2.IMREAD_GRAYSCALE,
             )
+
+            image = torch.from_numpy(image).float()
+            image = clip_underover_value(image)
+            image = image.numpy()
             image = min_max_normalize_img(image, min_value, max_value)
 
             pred, _ = model.overlap_predict(image)
