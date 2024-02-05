@@ -30,7 +30,10 @@ class SegDataset(Dataset):
         self.processed_data_dir = f"{self.config.processed_data_dir}"
         self.processed_data_dir += f"_{config.stride_height}_{config.stride_width}"
         self.transform = get_transforms(config, phase)
-        self.maxmin_df = pd.read_csv(config.minmax_df_path)
+        if config.minmax_df_path is not None:
+            self.maxmin_df = pd.read_csv(config.minmax_df_path)
+        else:
+            self.maxmin_df = None
 
     def __len__(self) -> int:
         return len(self.df)
@@ -72,16 +75,11 @@ class SegDataset(Dataset):
         image = torch.from_numpy(image)
         image = clip_underover_value(image, percent=0.1)
         image = image.numpy()
-        # image = self._normalize_img(
-        #     image, self.mean_dict[data_name], self.std_dict[data_name]
-        # # )
-        max_value = self.maxmin_df[self.maxmin_df["data_name"] == data_name][
-            "max"
-        ].values[0]
-        min_value = self.maxmin_df[self.maxmin_df["data_name"] == data_name][
-            "min"
-        ].values[0]
-        image = min_max_normalize_img(image, min_value, max_value)
+        if self.maxmin_df is not None:
+            data_values = self.maxmin_df[self.maxmin_df["data_name"] == data_name]
+            max_value = data_values["max"].values[0]
+            min_value = data_values["min"].values[0]
+            image = min_max_normalize_img(image, min_value, max_value)
         image = np.expand_dims(image.astype(np.float32), axis=-1)
         return image
 
