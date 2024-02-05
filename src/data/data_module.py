@@ -1,8 +1,8 @@
 import os
 import sys
 
-import pytorch_lightning as L
 import pandas as pd
+import pytorch_lightning as L
 from torch.utils.data import DataLoader
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
@@ -21,7 +21,7 @@ class DataModule(L.LightningDataModule):
             drop=True
         )
         if len(df) == 0:
-            print("No training data. df path:", self.config.train_df)
+            print(" No training data. df path:", self.config.train_df)
             raise RuntimeError
         dataset = SegDataset(df, self.config, phase="train")
         dataloader = DataLoader(
@@ -53,7 +53,8 @@ class DataModule(L.LightningDataModule):
 
 
 if __name__ == "__main__":
-    config = ExpConfig()
+    config = ExpConfig.load("/kaggle/config/config.yaml")
+    print(config)
     dm = DataModule(config)
     train_loader = dm.train_dataloader()
     print("train_loader", len(train_loader))
