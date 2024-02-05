@@ -1,114 +1,109 @@
-import os
-from dataclasses import dataclass, field
+import dataclasses
+import inspect
+import pathlib
+from dataclasses import dataclass
 from typing import List
+
+import yaml  # type: ignore
+
+
+@dataclasses.dataclass
+class YamlConfig:
+    def save(self, config_path: pathlib.Path):
+        """Export config as YAML file"""
+        assert (
+            config_path.parent.exists()
+        ), f"directory {config_path.parent} does not exist"
+
+        def convert_dict(data):
+            for key, val in data.items():
+                if isinstance(val, pathlib.Path):
+                    data[key] = str(val)
+                if isinstance(val, dict):
+                    data[key] = convert_dict(val)
+            return data
+
+        with open(config_path, "w") as f:
+            yaml.dump(convert_dict(dataclasses.asdict(self)), f)
+
+    @classmethod
+    def load(cls, config_path: str):
+        def convert_from_dict(parent_cls, data):
+            for key, val in data.items():
+                child_class = parent_cls.__dataclass_fields__[key].type
+                if inspect.isclass(child_class) and issubclass(child_class, YamlConfig):
+                    data[key] = child_class(**convert_from_dict(child_class, val))
+            return data
+
+        with open(config_path) as f:
+            config_data = yaml.full_load(f)
+            # recursively convert config item to YamlConfig
+            config_data = convert_from_dict(cls, config_data)
+            return cls(**config_data)
 
 
 @dataclass
-class ExpConfig:
+class ExpConfig(YamlConfig):
     # common
-    debug: bool = False
-    phase: str = "train"
+    debug: bool
+    phase: str
     # experiment
-    # exp_name: str = "exp002_Gradloss"
-    exp_name: str = "exp009_512_train13_percentail"
-    # exp_name: str = "exp003_Gradloss05"
-    exp_category: str = "baseline"
-    seed: int = 42
+    exp_name: str
+    exp_category: str
+    seed: int
     # model
-    model_name: str = "SegModel"
-    # encoder_name: str = "tf_efficientnet_b0"
-    encoder_name: str = "seresnext50_32x4d"
-    pretrained: bool = True
-    in_channels: int = 1
-    out_channels: int = 1
-    use_batchnorm: bool = True
-    dropout: float = 0.3
-    encoder_channels: List[int] = field(
-        default_factory=lambda: [64, 128, 256, 512, 512]
-    )
-    decoder_channels: List[int] = field(default_factory=lambda: [512, 256, 128, 64, 64])
+    model_name: str
+    encoder_name: str
+    pretrained: bool
+    in_channels: int
+    out_channels: int
+    use_batchnorm: bool
+    dropout: float
+    encoder_channels: List[int]
+    decoder_channels: List[int]
     # dirs
-    input_dir: str = "/kaggle/input"
-    competition_name: str = "blood-vessel-segmentation"
-    input_data_dir: str = os.path.join(input_dir, competition_name)
-    processed_data_dir: str = os.path.join("/kaggle", "working", "_processed")
-    output_dir: str = "/kaggle/working"
-    save_dir: str = os.path.join(output_dir, exp_name)
-    save_weight_dir = os.path.join(output_dir, "weights", exp_name)
+    input_dir: str
+    competition_name: str
+    input_data_dir: str
+    processed_data_dir: str
+    output_dir: str
+    save_dir: str
+    save_weight_dir: str
     # data
-    img_height: int = 512
-    img_width: int = 512
-    # img_height: int = 1024
-    # img_width: int = 1024
+    img_height: int
+    img_width: int
     ## preparedata
-    stride_height: int = img_height
-    stride_width: int = img_width
-    patch_height: int = int(stride_height * 1.5)
-    patch_width: int = int(stride_width * 1.5)
+    stride_height: int
+    stride_width: int
+    patch_height: int
+    patch_width: int
     ## loader
-    slice_num: int = in_channels
-    batch_size: int = 32
-    num_workers: int = 2
-    train_df: str = os.path.join(
-        output_dir, f"train_{stride_height}_{stride_width}.csv"
-    )
-    valid_df: str = os.path.join(
-        output_dir, f"valid_{stride_height}_{stride_width}.csv"
-    )
-    label_df = os.path.join(input_data_dir, "train_rles.csv")
-    train_data_name: List[str] = field(
-        default_factory=lambda: [
-            "kidney_1_dense",
-            # "kidney_1_voi",
-            # "kidney_2",
-            "kidney_3_sparse",
-        ]
-    )
-    valid_data_name: List[str] = field(
-        default_factory=lambda: [
-            # "kidney_1_dense",
-            "kidney_2"
-        ]
-    )
-    minmax_df_path: str = os.path.join(output_dir, "centerslice_maxmean.csv")
+    slice_num: int
+    batch_size: int
+    num_workers: int
+    train_df: str
+    valid_df: str
+    label_df: str
+    train_data_name: List[str]
+    valid_data_name: List[str]
+    minmax_df_path: str | None
 
     # train
-    epochs: int = 10
-    T_max: int = epochs
-    lr: float = 1e-4
-    eta_min: float = 1e-6
-    loss_type: str = "dice_grad"
+    epochs: int
+    T_max: int
+    lr: float
+    eta_min: float
+    loss_type: str
     # logger
-    monitor: str = "val_loss"
-    monitor_mode: str = "min"
-    check_val_every_n_epoch: int = 1
+    monitor: str
+    monitor_mode: str
+    check_val_every_n_epoch: int
     # predict
-    overlap_rate: float = 0.2
-    threshold: float = 0.5
-    object_min_size: int = 3
-    if encoder_name == "seresnext50_32x4d":
-        batch_size = 2
-    if debug:
-        exp_name = "debug"
-        exp_category = "debug"
-        save_dir = os.path.join(output_dir, exp_name)
-        save_weight_dir = os.path.join(output_dir, "weights", exp_name)
-        train_df = os.path.join(
-            output_dir, f"train_{stride_height}_{stride_width}_debug.csv"
-        )
-        valid_df = os.path.join(
-            output_dir, f"valid_{stride_height}_{stride_width}_debug.csv"
-        )
-        epochs = 2
-        train_data_name = field(default_factory=lambda: ["kidney_1_dense"])
-        valid_data_name = field(default_factory=lambda: ["kidney_2"])
+    overlap_rate: float
+    threshold: float
+    object_min_size: int
 
 
 if __name__ == "__main__":
-    config = ExpConfig()
+    config = ExpConfig.load("/kaggle/config/config.yaml")
     print(config)
-    print("---")
-    from dataclasses import asdict
-
-    config_dict = asdict(config)
-    print(config_dict)

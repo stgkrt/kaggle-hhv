@@ -1,9 +1,8 @@
 import os
-from dataclasses import asdict
 
+import hydra
 import pytorch_lightning as L
 import torch
-import yaml  # type: ignore
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import (
     LearningRateMonitor,
@@ -18,8 +17,16 @@ from src.data.data_module import DataModule
 from src.model.model_module import ModelModule
 
 
+def set_config(config: ExpConfig) -> ExpConfig:
+    config.save_weight_dir = os.path.join(config.output_dir, "weights", config.exp_name)
+    config.save_dir = os.path.join(config.output_dir, config.exp_name)
+    return config
+
+
+@hydra.main(config_path="/kaggle/config", config_name="config")
 def run_train(config: ExpConfig) -> None:
-    config = ExpConfig()
+    print(config)
+    # config = ExpConfig()
     if not os.path.exists(config.save_dir):
         print(config.save_dir)
         os.makedirs(config.save_dir)
@@ -30,10 +37,6 @@ def run_train(config: ExpConfig) -> None:
     else:
         raise RuntimeError(f"{config.save_dir} already exists")
     seed_everything(config.seed)
-
-    # save config
-    with open(os.path.join(config.save_weight_dir, "config.yaml"), "w") as f:
-        yaml.dump(asdict(config), f)
 
     datamodule = DataModule(config)
     model = ModelModule(config)
@@ -59,9 +62,9 @@ def run_train(config: ExpConfig) -> None:
         log_model=False,
         offline=True,
     )
-    pl_logger.log_hyperparams(asdict(config))
+    pl_logger.log_hyperparams(config)
     csv_logger = CSVLogger(save_dir=config.save_dir, name="log")
-    csv_logger.log_hyperparams(asdict(config))
+    csv_logger.log_hyperparams(config)
 
     trainer = L.Trainer(
         max_epochs=config.epochs,
@@ -86,5 +89,5 @@ def run_train(config: ExpConfig) -> None:
 
 
 if __name__ == "__main__":
-    config = ExpConfig()
-    run_train(config)
+    # config = ExpConfig()
+    run_train()
