@@ -20,13 +20,15 @@ def make_submit_df(
     model: LightningModule,
     data_dir: str,
     data_name_list: List[str],
-    max_min_df_path: str,
+    max_min_df_path: str | None = None,
     threshold: float = 0.5,
     object_min_size: int = 10,
 ) -> pd.DataFrame:
     data_id_list = []
     rle_list = []
-    max_min_df = pd.read_csv(max_min_df_path)
+    max_min_df = None
+    if max_min_df_path is not None:
+        max_min_df = pd.read_csv(max_min_df_path)
     for data_name in sorted(data_name_list):
         slice_id_list = sorted(
             [
@@ -35,9 +37,11 @@ def make_submit_df(
             ]
         )
         print(f"\n predicting... => {data_name}, slice num: {len(slice_id_list)}")
-        data_values = max_min_df[max_min_df["data_name"] == data_name]
-        max_value = data_values["max"].values[0]
-        min_value = data_values["min"].values[0]
+        if max_min_df is not None:
+            data_values = max_min_df[max_min_df["data_name"] == data_name]
+            max_value = data_values["max"].values[0]
+            min_value = data_values["min"].values[0]
+
         start_time = time.time()
         for idx, slice_id in enumerate(slice_id_list):
             image = cv2.imread(
@@ -48,7 +52,8 @@ def make_submit_df(
             image = torch.from_numpy(image).float()
             image = clip_underover_value(image)
             image = image.numpy()
-            image = min_max_normalize_img(image, min_value, max_value)
+            if max_min_df is not None:
+                image = min_max_normalize_img(image, min_value, max_value)
 
             pred, _ = model.overlap_predict(image)
             pred = remove_small_objects(pred, object_min_size, threshold)
